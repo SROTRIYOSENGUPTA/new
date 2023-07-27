@@ -263,6 +263,26 @@ public class userdatareadlite {
     }
 }
 
+////
+
+Connection to SQLite database successful.
+Enter username to search: user1
+org.sqlite.SQLiteException: [SQLITE_ERROR] SQL error or missing database (no such table: t1)
+	at org.xerial.sqlitejdbc@3.42.0.0/org.sqlite.core.DB.newSQLException(DB.java:1179)
+	at org.xerial.sqlitejdbc@3.42.0.0/org.sqlite.core.DB.newSQLException(DB.java:1190)
+	at org.xerial.sqlitejdbc@3.42.0.0/org.sqlite.core.DB.throwex(DB.java:1150)
+	at org.xerial.sqlitejdbc@3.42.0.0/org.sqlite.core.NativeDB.prepare_utf8(Native Method)
+	at org.xerial.sqlitejdbc@3.42.0.0/org.sqlite.core.NativeDB.prepare(NativeDB.java:126)
+	at org.xerial.sqlitejdbc@3.42.0.0/org.sqlite.core.DB.prepare(DB.java:264)
+	at org.xerial.sqlitejdbc@3.42.0.0/org.sqlite.core.CorePreparedStatement.<init>(CorePreparedStatement.java:46)
+	at org.xerial.sqlitejdbc@3.42.0.0/org.sqlite.jdbc3.JDBC3PreparedStatement.<init>(JDBC3PreparedStatement.java:32)
+	at org.xerial.sqlitejdbc@3.42.0.0/org.sqlite.jdbc4.JDBC4PreparedStatement.<init>(JDBC4PreparedStatement.java:25)
+	at org.xerial.sqlitejdbc@3.42.0.0/org.sqlite.jdbc4.JDBC4Connection.prepareStatement(JDBC4Connection.java:34)
+	at org.xerial.sqlitejdbc@3.42.0.0/org.sqlite.jdbc3.JDBC3Connection.prepareStatement(JDBC3Connection.java:226)
+	at org.xerial.sqlitejdbc@3.42.0.0/org.sqlite.jdbc3.JDBC3Connection.prepareStatement(JDBC3Connection.java:206)
+	at userdatareadlite.searchForPassword(userdatareadlite.java:54)
+	at userdatareadlite.main(userdatareadlite.java:34)
+Username not found.
 
 
 
