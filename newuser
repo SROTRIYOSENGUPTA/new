@@ -15,3 +15,6 @@ public class newuser {
         return password;
     }
 }
+
+Connection to H2 database successful.
+org.h2.jdbc.JdbcSQLException: Table "USERS" not found; SQL statement:
