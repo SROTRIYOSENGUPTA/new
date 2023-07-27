@@ -427,6 +427,133 @@ public class userdatareadlite {
     }
 }
 
+//////
+
+Microsoft Windows [Version 10.0.19045.3208]
+(c) Microsoft Corporation. All rights reserved.
+
+C:\Users\SSengupta>sqlite3 data.db
+'sqlite3' is not recognized as an internal or external command,
+operable program or batch file.
+
+C:\Users\SSengupta>sqlite --version
+'sqlite' is not recognized as an internal or external command,
+operable program or batch file.
+
+C:\Users\SSengupta>CD ..
+
+C:\Users>cd ..
+
+C:\>cd sqlite
+
+C:\sqlite>ls -ltr
+'ls' is not recognized as an internal or external command,
+operable program or batch file.
+
+C:\sqlite>pwd
+'pwd' is not recognized as an internal or external command,
+operable program or batch file.
+
+C:\sqlite>dir
+ Volume in drive C is Windows
+ Volume Serial Number is D222-5DD7
+
+ Directory of C:\sqlite
+
+07/27/2023  02:55 PM    <DIR>          .
+07/27/2023  02:55 PM    <DIR>          ..
+07/27/2023  02:55 PM                 0 my_database.db
+05/16/2023  09:46 AM           594,944 sqldiff.exe
+05/16/2023  09:46 AM         1,153,024 sqlite3.exe
+05/16/2023  09:46 AM         2,110,976 sqlite3_analyzer.exe
+               4 File(s)      3,858,944 bytes
+               2 Dir(s)  84,729,094,144 bytes free
+
+C:\sqlite>sqlite3
+SQLite version 3.42.0 2023-05-16 12:36:15
+Enter ".help" for usage hints.
+Connected to a transient in-memory database.
+Use ".open FILENAME" to reopen on a persistent database.
+sqlite> sqlite3 my_database.db
+   ...> ;
+Parse error: near "sqlite3": syntax error
+  sqlite3 my_database.db ;
+  ^--- error here
+sqlite> sqlite3 my_database.db
+   ...>
+   ...> select * from user
+   ...> select * from user;
+Parse error: near "sqlite3": syntax error
+  sqlite3 my_database.db  select * from user select * from user;
+  ^--- error here
+sqlite> .open my_database.db
+sqlite> select * from users
+   ...> ;
+Parse error: no such table: users
+sqlite> create table t1(one text, two int);
+sqlite> select * from t1;
+sqlite> insert into t1 values ('h', 1);
+sqlite> select * from t1;
+h|1
+sqlite> drop table t1;
+sqlite> select * from t1;
+Parse error: no such table: t1
+sqlite> insert into t1 values ('usera', 123);
+Parse error: no such table: t1
+sqlite> create table t1(one text, two int);
+sqlite> insert into t1 values ('h', 1);
+sqlite> insert into t1 values ('usera', 123);
+sqlite> insert into t1 values ('userb', 112);
+sqlite> select * from t1;
+h|1
+usera|123
+userb|112
+sqlite> drop table t1;
+sqlite> create table t1(one text, two int);
+sqlite> insert into t1 values ('user1', 1234);
+sqlite> insert into t1 values ('user2', 2468);
+sqlite> insert into t1 values ('user3', 1357);
+sqlite> insert into t1 values ('user4', 3579);
+sqlite> insert into t1 values ('user5', 9876);
+sqlite> insert into t1 values ('user6', 8531);
+sqlite> drop table t1
+   ...> drop table t1;
+Parse error: near "drop": syntax error
+  drop table t1 drop table t1;
+                ^--- error here
+sqlite> drop table t1;
+sqlite> create table userinput(user char, password char);
+sqlite> insert into t1 values ('user1', 'password');
+Parse error: no such table: t1
+sqlite> insert into userinput values ('user1', 'password');
+sqlite> insert into userinput values ('user2', 'password2');
+sqlite> insert into userinput values ('user3', 'password3');
+sqlite> insert into userinput values ('user4', 'password4');
+sqlite> insert into userinput values ('user5', 'password5');
+sqlite> select * from userinput;
+user1|password
+user2|password2
+user3|password3
+user4|password4
+user5|password5
+sqlite> select * from userinput;
+user1|password
+user2|password2
+user3|password3
+user4|password4
+user5|password5
+das;dj|saldikjasl;d
+sqlite> select user, password from userinput;
+user1|password
+user2|password2
+user3|password3
+user4|password4
+user5|password5
+das;dj|saldikjasl;d
+user6|password6
+sqlite> select user, password from userinput;
+
+
 
 
 
