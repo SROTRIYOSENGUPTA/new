@@ -67,3 +67,62 @@ public class UserDataWriteH2 {
     }
 }
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class UserDataReadH2 {
+    private static final String DATABASE_URL = "jdbc:h2:~/test";
+    private static final String DATABASE_USER = "sa";
+    private static final String DATABASE_PASSWORD = "";
+
+    public static void main(String[] args) {
+        try (Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD)) {
+            System.out.println("Connection to H2 database successful.");
+        } catch (SQLException e) {
+            System.err.println("Connection failed: " + e.getMessage());
+        }
+
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter username to search: ");
+        String searchUsername = scanner.nextLine();
+        scanner.close();
+
+        // Search for the user based on the username input by the user
+        User foundUser = searchForUser(searchUsername);
+
+        // Display the result
+        if (foundUser != null) {
+            System.out.println("User found: " + foundUser.getName());
+            System.out.println("Password for username '" + searchUsername + "' is: " + foundUser.getPassword());
+        } else {
+            System.out.println("Username not found.");
+        }
+    }
+
+    private static User searchForUser(String searchUsername) {
+        try (Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD)) {
+            String selectQuery = "SELECT name, password FROM users WHERE username = ?";
+
+            try (PreparedStatement statement = connection.prepareStatement(selectQuery)) {
+                statement.setString(1, searchUsername);
+
+                try (ResultSet resultSet = statement.executeQuery()) {
+                    if (resultSet.next()) {
+                        String name = resultSet.getString("name");
+                        String password = resultSet.getString("password");
+                        return new User(name, searchUsername, password);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Username not found
+    }
+}
+
+
