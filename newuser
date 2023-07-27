@@ -553,6 +553,8 @@ das;dj|saldikjasl;d
 user6|password6
 sqlite> select user, password from userinput;
 
+// To do: print unlimited columns and generate unlimited tables like usertable
+
 
 
 
