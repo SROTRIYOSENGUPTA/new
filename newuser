@@ -169,6 +169,8 @@ private static String searchForPassword(String searchUsername) {
     return null; // Username not found
 }
 
+Connection failed: No suitable driver found for jdbc:sqlite:my_database.db
+
 
 
 
