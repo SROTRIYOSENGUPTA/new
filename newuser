@@ -135,4 +135,13 @@ java.io.FileNotFoundException: create_table.sql (The system cannot find the file
 	at userdatawriteeeh2.main(userdatawriteeeh2.java:17)
 Table 'USERS' created successfully.
 
+cd C:\Users\YourUsername\ProjectFolder
+
+javac UserDataWriteH2.java User.java UserDataReadH2.java
+
+java UserDataWriteH2
+
+java UserDataReadH2
+
+
 
