@@ -136,12 +136,20 @@ java.io.FileNotFoundException: create_table.sql (The system cannot find the file
 Table 'USERS' created successfully.
 
 cd C:\Users\YourUsername\ProjectFolder
+cd: C:\Users\SSengupta\eclipse-workspace
 
 javac UserDataWriteH2.java User.java UserDataReadH2.java
 
 java UserDataWriteH2
 
 java UserDataReadH2
+
+Exception in thread "main" java.lang.Error: Unresolved compilation problem: 
+	Duplicate local variable selectQuery
+
+	at UserDataReadH2.searchForPassword(UserDataReadH2.java:63)
+	at UserDataReadH2.main(UserDataReadH2.java:43)
+
 
 
 
