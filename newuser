@@ -18,3 +18,52 @@ public class newuser {
 
 Connection to H2 database successful.
 org.h2.jdbc.JdbcSQLException: Table "USERS" not found; SQL statement:
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class UserDataWriteH2 {
+    private static final String DATABASE_URL = "jdbc:h2:~/test";
+    private static final String DATABASE_USER = "sa";
+    private static final String DATABASE_PASSWORD = "";
+
+    public static void main(String[] args) {
+        // Create the table if it doesn't exist
+        createTable();
+
+        // Now you can proceed with inserting user data into the 'USERS' table
+        // Prompt user for input (username and password) and create the User object...
+    }
+
+    private static void createTable() {
+        try (Connection connection = DriverManager.getConnection(DATABASE_URL, DATABASE_USER, DATABASE_PASSWORD)) {
+            String createTableScript = readFile("create_table.sql");
+
+            try (Statement statement = connection.createStatement()) {
+                statement.execute(createTableScript);
+            }
+
+            System.out.println("Table 'USERS' created successfully.");
+        } catch (SQLException e) {
+            System.err.println("Table creation failed: " + e.getMessage());
+        }
+    }
+
+    private static String readFile(String filename) {
+        StringBuilder content = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                content.append(line).append("\n");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return content.toString();
+    }
+}
+
