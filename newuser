@@ -283,6 +283,58 @@ org.sqlite.SQLiteException: [SQLITE_ERROR] SQL error or missing database (no suc
 	at userdatareadlite.searchForPassword(userdatareadlite.java:54)
 	at userdatareadlite.main(userdatareadlite.java:34)
 Username not found.
+//
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class userdatareadlite {
+    private static final String DATABASE_URL = "jdbc:sqlite:my_database.db"; // SQLite connection URL
+
+    public static void main(String[] args) {
+        try (Connection connection = DriverManager.getConnection(DATABASE_URL)) {
+            System.out.println("Connection to SQLite database successful.");
+
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("Enter username to search: ");
+            String searchUsername = scanner.nextLine();
+
+            // Search for the password based on the username input by the user
+            String foundPassword = searchForPassword(connection, searchUsername);
+
+            // Display the result
+            if (foundPassword != null) {
+                System.out.println("Password for username '" + searchUsername + "' is: " + foundPassword);
+            } else {
+                System.out.println("Username not found.");
+            }
+        } catch (SQLException e) {
+            System.err.println("Connection failed or SQL error: " + e.getMessage());
+        }
+    }
+
+    private static String searchForPassword(Connection connection, String searchUsername) {
+        String foundPassword = null;
+        String selectQuery = "SELECT password FROM t1 WHERE username = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(selectQuery)) {
+            statement.setString(1, searchUsername);
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    foundPassword = resultSet.getString("password");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return foundPassword; // Return null if the username is not found
+    }
+}
 
 
 
