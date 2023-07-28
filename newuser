@@ -745,41 +745,12 @@ public class UserDataReadLite {
             System.out.print("Enter table name: ");
             String tableName = scanner.nextLine();
 
-            System.out.print("Enter username to search: ");
-            String searchUsername = scanner.nextLine();
-
-            String foundPassword = searchForPassword(connection, tableName, searchUsername);
-
-            if (foundPassword != null) {
-                System.out.println("Password for username '" + searchUsername + "' is: " + foundPassword);
-            } else {
-                System.out.println("Username not found.");
-            }
-
             // Retrieve and display all data from the custom table
             System.out.println("\nAll data in the table '" + tableName + "':");
             getAllDataFromTable(connection, tableName);
         } catch (SQLException e) {
             System.err.println("Connection failed or SQL error: " + e.getMessage());
         }
-    }
-
-    private static String searchForPassword(Connection connection, String tableName, String searchUsername) {
-        String foundPassword = null;
-        String selectQuery = "SELECT password FROM " + tableName + " WHERE username = ?";
-
-        try (PreparedStatement statement = connection.prepareStatement(selectQuery)) {
-            statement.setString(1, searchUsername);
-
-            try (ResultSet resultSet = statement.executeQuery()) {
-                if (resultSet.next()) {
-                    foundPassword = resultSet.getString("password");
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return foundPassword; // Return null if the username is not found
     }
 
     private static void getAllDataFromTable(Connection connection, String tableName) {
@@ -789,15 +760,20 @@ public class UserDataReadLite {
              ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next()) {
-                String username = resultSet.getString("username");
-                String password = resultSet.getString("password");
-                System.out.println("Username: " + username + ", Password: " + password);
+                // Replace these column names with the actual column names in your custom table
+                String column1Value = resultSet.getString("column1");
+                String column2Value = resultSet.getString("column2");
+                // Add more columns if needed
+
+                // Display the retrieved data
+                System.out.println("Column 1: " + column1Value + ", Column 2: " + column2Value);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 }
+
 
 
 
