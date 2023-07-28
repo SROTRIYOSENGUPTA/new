@@ -555,6 +555,104 @@ sqlite> select user, password from userinput;
 
 // To do: print unlimited columns and generate unlimited tables like usertable
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class UserDataWriteLite {
+    private static final String DATABASE_URL = "jdbc:sqlite:my_database.db"; // SQLite connection URL
+
+    public static void main(String[] args) {
+        try (Connection connection = DriverManager.getConnection(DATABASE_URL)) {
+            System.out.println("Connection to SQLite database successful.");
+
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("Enter table name: ");
+            String tableName = scanner.nextLine();
+
+            List<String> columnNames = new ArrayList<>();
+            String columnName;
+            do {
+                System.out.print("Enter column name (or type 'done' to finish): ");
+                columnName = scanner.nextLine();
+                if (!columnName.equalsIgnoreCase("done")) {
+                    columnNames.add(columnName);
+                }
+            } while (!columnName.equalsIgnoreCase("done"));
+
+            if (columnNames.isEmpty()) {
+                System.out.println("No columns specified. Exiting program.");
+                return;
+            }
+
+            createTable(connection, tableName, columnNames);
+            insertDataIntoTable(connection, tableName, columnNames);
+        } catch (SQLException e) {
+            System.err.println("Connection failed or SQL error: " + e.getMessage());
+        }
+    }
+
+    private static void createTable(Connection connection, String tableName, List<String> columnNames) {
+        StringBuilder createQuery = new StringBuilder("CREATE TABLE " + tableName + " (");
+
+        for (int i = 0; i < columnNames.size(); i++) {
+            createQuery.append(columnNames.get(i)).append(" TEXT");
+            if (i < columnNames.size() - 1) {
+                createQuery.append(", ");
+            }
+        }
+
+        createQuery.append(");");
+
+        try (PreparedStatement statement = connection.prepareStatement(createQuery.toString())) {
+            statement.executeUpdate();
+            System.out.println("Table '" + tableName + "' created successfully.");
+        } catch (SQLException e) {
+            System.err.println("Error creating table: " + e.getMessage());
+        }
+    }
+
+    private static void insertDataIntoTable(Connection connection, String tableName, List<String> columnNames) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Enter data for each column:");
+        StringBuilder insertQuery = new StringBuilder("INSERT INTO " + tableName + " (");
+        for (int i = 0; i < columnNames.size(); i++) {
+            insertQuery.append(columnNames.get(i));
+            if (i < columnNames.size() - 1) {
+                insertQuery.append(", ");
+            }
+        }
+        insertQuery.append(") VALUES (");
+
+        List<String> values = new ArrayList<>();
+        for (String columnName : columnNames) {
+            System.out.print(columnName + ": ");
+            String value = scanner.nextLine();
+            values.add(value);
+            insertQuery.append("?, ");
+        }
+        insertQuery.delete(insertQuery.length() - 2, insertQuery.length()); // Remove the last comma and space
+        insertQuery.append(");");
+
+        try (PreparedStatement statement = connection.prepareStatement(insertQuery.toString())) {
+            for (int i = 0; i < values.size(); i++) {
+                statement.setString(i + 1, values.get(i));
+            }
+
+            statement.executeUpdate();
+            System.out.println("Data inserted successfully into table '" + tableName + "'.");
+        } catch (SQLException e) {
+            System.err.println("Error inserting data: " + e.getMessage());
+        }
+    }
+}
+
+
 
 
 
