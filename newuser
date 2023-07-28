@@ -834,6 +834,80 @@ public class UserDataReadLite {
     }
 }
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class UserDataReadLite {
+    private static final String DATABASE_URL = "jdbc:sqlite:my_database.db"; // SQLite connection URL
+
+    public static void main(String[] args) {
+        try (Connection connection = DriverManager.getConnection(DATABASE_URL)) {
+            System.out.println("Connection to SQLite database successful.");
+
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("Enter table name: ");
+            String tableName = scanner.nextLine();
+
+            System.out.print("Enter columns (comma-separated) to select from the table: ");
+            String columnsInput = scanner.nextLine();
+
+            List<String> selectedColumns = parseColumnsInput(columnsInput);
+
+            // Retrieve and display selected data from the custom table
+            System.out.println("\nSelected data from the table '" + tableName + "':");
+            getDataFromTable(connection, tableName, selectedColumns);
+        } catch (SQLException e) {
+            System.err.println("Connection failed or SQL error: " + e.getMessage());
+        }
+    }
+
+    private static List<String> parseColumnsInput(String input) {
+        List<String> columns = new ArrayList<>();
+        String[] columnArray = input.split(",");
+        for (String column : columnArray) {
+            columns.add(column.trim());
+        }
+        return columns;
+    }
+
+    private static void getDataFromTable(Connection connection, String tableName, List<String> selectedColumns) {
+        String selectQuery = buildSelectQuery(tableName, selectedColumns);
+
+        try (PreparedStatement statement = connection.prepareStatement(selectQuery);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                // Display data for each row
+                for (String column : selectedColumns) {
+                    String columnValue = resultSet.getString(column);
+                    System.out.println(column + ": " + columnValue);
+                }
+                System.out.println();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static String buildSelectQuery(String tableName, List<String> selectedColumns) {
+        StringBuilder queryBuilder = new StringBuilder("SELECT ");
+        for (int i = 0; i < selectedColumns.size(); i++) {
+            queryBuilder.append(selectedColumns.get(i));
+            if (i < selectedColumns.size() - 1) {
+                queryBuilder.append(", ");
+            }
+        }
+        queryBuilder.append(" FROM ").append(tableName);
+        return queryBuilder.toString();
+    }
+}
+
 
 
 
