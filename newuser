@@ -773,6 +773,66 @@ public class UserDataReadLite {
         }
     }
 }
+//
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+public class UserDataReadLite {
+    private static final String DATABASE_URL = "jdbc:sqlite:my_database.db"; // SQLite connection URL
+
+    public static void main(String[] args) {
+        try (Connection connection = DriverManager.getConnection(DATABASE_URL)) {
+            System.out.println("Connection to SQLite database successful.");
+
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("Enter table name: ");
+            String tableName = scanner.nextLine();
+
+            // Retrieve and display all data from the custom table
+            System.out.println("\nAll data in the table '" + tableName + "':");
+            getAllDataFromTable(connection, tableName);
+        } catch (SQLException e) {
+            System.err.println("Connection failed or SQL error: " + e.getMessage());
+        }
+    }
+
+    private static void getAllDataFromTable(Connection connection, String tableName) {
+        String selectAllQuery = "SELECT * FROM " + tableName;
+
+        try (PreparedStatement statement = connection.prepareStatement(selectAllQuery);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            // Retrieve column names to display data dynamically
+            List<String> columnNames = getColumnNames(resultSet);
+            while (resultSet.next()) {
+                // Display data for each row dynamically using column names
+                for (String columnName : columnNames) {
+                    String columnValue = resultSet.getString(columnName);
+                    System.out.println(columnName + ": " + columnValue);
+                }
+                System.out.println();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static List<String> getColumnNames(ResultSet resultSet) throws SQLException {
+        List<String> columnNames = new ArrayList<>();
+        int columnCount = resultSet.getMetaData().getColumnCount();
+        for (int i = 1; i <= columnCount; i++) {
+            columnNames.add(resultSet.getMetaData().getColumnName(i));
+        }
+        return columnNames;
+    }
+}
 
 
 
