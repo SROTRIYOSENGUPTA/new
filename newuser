@@ -1187,3 +1187,55 @@ public class UserDataReadLite {
         }
     }
 }
+
+//
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class UserDataReadLite {
+    private static final String DATABASE_URL = "jdbc:sqlite:my_database.db"; // SQLite connection URL
+
+    public static void main(String[] args) {
+        try (Connection connection = DriverManager.getConnection(DATABASE_URL)) {
+            System.out.println("Connection to SQLite database successful.");
+
+            Scanner scanner = new Scanner(System.in);
+            System.out.print("Enter table name: ");
+            String tableName = scanner.nextLine();
+
+            System.out.print("Enter column name to search (or type 'stop' to finish): ");
+            String searchColumn = scanner.nextLine();
+
+            while (!searchColumn.equalsIgnoreCase("stop")) {
+                // Retrieve and display search results
+                System.out.println("\nSearch results in the table '" + tableName + "' for column '" + searchColumn + "':");
+                searchDataInTable(connection, tableName, searchColumn);
+
+                System.out.print("\nEnter column name to search (or type 'stop' to finish): ");
+                searchColumn = scanner.nextLine();
+            }
+        } catch (SQLException e) {
+            System.err.println("Connection failed or SQL error: " + e.getMessage());
+        }
+    }
+
+    private static void searchDataInTable(Connection connection, String tableName, String searchColumn) {
+        String selectQuery = "SELECT " + searchColumn + " FROM " + tableName;
+        try (PreparedStatement statement = connection.prepareStatement(selectQuery);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            while (resultSet.next()) {
+                String value = resultSet.getString(1);
+                System.out.println(value);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
