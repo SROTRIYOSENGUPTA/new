@@ -1107,6 +1107,7 @@ public class userdatareadlite {
 ///
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -1132,7 +1133,7 @@ public class UserDataReadLite {
             String searchColumn = scanner.nextLine();
 
             // Retrieve and display search results
-            System.out.println("\nSearch results in the table '" + tableName + "':");
+            System.out.println("\nSearch results in the table '" + tableName + "' for column '" + searchColumn + "':");
             searchDataInTable(connection, tableName, searchColumn);
         } catch (SQLException e) {
             System.err.println("Connection failed or SQL error: " + e.getMessage());
@@ -1145,32 +1146,44 @@ public class UserDataReadLite {
     }
 
     private static void searchDataInTable(Connection connection, String tableName, String searchColumn) {
-        String selectQuery = "SELECT " + searchColumn + " FROM " + tableName;
-        executeAndDisplayQuery(connection, selectQuery);
-    }
-
-    private static void executeAndDisplayQuery(Connection connection, String query) {
-        try (PreparedStatement statement = connection.prepareStatement(query);
+        String selectQuery = "SELECT * FROM " + tableName;
+        try (PreparedStatement statement = connection.prepareStatement(selectQuery);
              ResultSet resultSet = statement.executeQuery()) {
 
             while (resultSet.next()) {
-                String value = resultSet.getString(1);
+                String value = resultSet.getString(searchColumn);
                 System.out.println(value);
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
+
+    private static void executeAndDisplayQuery(Connection connection, String query) {
+        try (PreparedStatement statement = connection.prepareStatement(query);
+             ResultSet resultSet = statement.executeQuery()) {
+
+            // Retrieve column names
+            DatabaseMetaData metaData = connection.getMetaData();
+            ResultSet columnsResultSet = metaData.getColumns(null, null, resultSet.getMetaData().getTableName(1), null);
+
+            String columns = "";
+            while (columnsResultSet.next()) {
+                columns += columnsResultSet.getString("COLUMN_NAME") + ", ";
+            }
+            columns = columns.substring(0, columns.length() - 2);
+
+            // Display data for each row
+            while (resultSet.next()) {
+                System.out.println("Row " + resultSet.getRow() + ":");
+                for (String column : columns.split(", ")) {
+                    String value = resultSet.getString(column);
+                    System.out.println(column + ": " + value);
+                }
+                System.out.println();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }
-
-
-
-
-
-
-
-
-
-
-
-
