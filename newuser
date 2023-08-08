@@ -1371,4 +1371,66 @@ public class SqlSearch {
     }
 }
 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class SqlSearch {
+
+    // Replace with your actual database connection details
+    private static final String DB_URL = "jdbc:mysql://localhost:3306/your_database";
+    private static final String DB_USER = "your_username";
+    private static final String DB_PASSWORD = "your_password";
+
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
+    }
+
+    public PreparedStatement getNewSearchStatement(Connection con, int searchId) throws SQLException {
+        String tsearchTableName = "tsearch"; // Replace with the actual table name
+
+        String query = "SELECT * FROM " + tsearchTableName + " WHERE searchId = ?";
+        PreparedStatement preparedStatement = con.prepareStatement(query);
+        preparedStatement.setInt(1, searchId);
+        return preparedStatement;
+    }
+
+    public PreparedStatement getNewSearchColStatement(Connection con, int searchId) throws SQLException {
+        String tsearchcolTableName = "tsearchcol"; // Replace with the actual table name
+
+        String query = "SELECT * FROM " + tsearchcolTableName + " WHERE searchId = ?";
+        PreparedStatement preparedStatement = con.prepareStatement(query);
+        preparedStatement.setInt(1, searchId);
+        return preparedStatement;
+    }
+
+    public static void main(String[] args) {
+        SqlSearch sqlSearch = new SqlSearch();
+        int searchId = 123; // Replace with the actual search ID
+
+        try (Connection connection = sqlSearch.getConnection()) {
+            PreparedStatement searchStatement = sqlSearch.getNewSearchStatement(connection, searchId);
+            try (ResultSet searchResultSet = searchStatement.executeQuery()) {
+                while (searchResultSet.next()) {
+                    // Process each row in the searchResultSet
+                    // For example: String columnValue = searchResultSet.getString("columnName");
+                }
+            }
+
+            PreparedStatement searchColStatement = sqlSearch.getNewSearchColStatement(connection, searchId);
+            try (ResultSet searchColResultSet = searchColStatement.executeQuery()) {
+                while (searchColResultSet.next()) {
+                    // Process each row in the searchColResultSet
+                    // For example: String columnValue = searchColResultSet.getString("columnName");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+
 
