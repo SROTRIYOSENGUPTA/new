@@ -1308,3 +1308,67 @@ public class UserDataReadLite {
 }
 
 
+
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class SqlSearch {
+    // Assuming SMeta and SbfMeta are classes defining tsearch and tsearchcol columns
+
+    public PreparedStatement getNewSearchStatement(Connection con, int searchId) throws SQLException {
+        String tsearchTableName = "tsearch"; // Replace with the actual table name
+        String tsearchcolTableName = "tsearchcol"; // Replace with the actual table name
+
+        String query = "SELECT * FROM " + tsearchTableName + " WHERE searchId = ?";
+        PreparedStatement preparedStatement = con.prepareStatement(query);
+        preparedStatement.setInt(1, searchId);
+        return preparedStatement;
+    }
+
+    public PreparedStatement getNewSearchColStatement(Connection con, int searchId) throws SQLException {
+        String tsearchcolTableName = "tsearchcol"; // Replace with the actual table name
+
+        String query = "SELECT * FROM " + tsearchcolTableName + " WHERE searchId = ?";
+        PreparedStatement preparedStatement = con.prepareStatement(query);
+        preparedStatement.setInt(1, searchId);
+        return preparedStatement;
+    }
+
+    public static void main(String[] args) {
+        try {
+            // Replace with your database connection logic
+            Connection connection = getConnection();
+
+            SqlSearch sqlSearch = new SqlSearch();
+            int searchId = 123; // Replace with the actual search ID
+
+            PreparedStatement searchStatement = sqlSearch.getNewSearchStatement(connection, searchId);
+            ResultSet searchResultSet = searchStatement.executeQuery();
+            // Process searchResultSet as needed
+
+            PreparedStatement searchColStatement = sqlSearch.getNewSearchColStatement(connection, searchId);
+            ResultSet searchColResultSet = searchColStatement.executeQuery();
+            // Process searchColResultSet as needed
+
+            // Close the resources appropriately
+            searchResultSet.close();
+            searchStatement.close();
+            searchColResultSet.close();
+            searchColStatement.close();
+            connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Replace this with your actual database connection logic
+    private static Connection getConnection() throws SQLException {
+        // Implement your connection logic here
+        return null;
+    }
+}
+
+
