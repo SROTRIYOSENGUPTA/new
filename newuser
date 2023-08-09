@@ -1433,4 +1433,49 @@ public class SqlSearch {
 }
 
 
+///
+
+public class SqlSearch {
+
+    public PreparedStatement getNewSearchStatement(Connection con, int searchId, boolean useSbm) throws SQLException {
+        if (useSbm) {
+            String query = "SELECT * FROM t_search WHERE searchId = ?";
+            PreparedStatement preparedStatement = con.prepareStatement(query);
+            preparedStatement.setInt(1, searchId);
+            return preparedStatement;
+        } else {
+            String query = "SELECT * FROM t_searchcol WHERE searchId = ?";
+            PreparedStatement preparedStatement = con.prepareStatement(query);
+            preparedStatement.setInt(1, searchId);
+            return preparedStatement;
+        }
+    }
+
+    public static void main(String[] args) {
+        int searchId = 123; // Replace with the actual search ID
+        boolean useSbm = true; // Change this based on your requirement
+
+        try (Connection connection = getConnection()) {
+            SqlSearch sqlSearch = new SqlSearch();
+            PreparedStatement searchStatement = sqlSearch.getNewSearchStatement(connection, searchId, useSbm);
+
+            try (ResultSet searchResultSet = searchStatement.executeQuery()) {
+                while (searchResultSet.next()) {
+                    // Process each row in the searchResultSet
+                    // For example: String columnValue = searchResultSet.getString("columnName");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Replace this with your actual database connection logic
+    private static Connection getConnection() throws SQLException {
+        // Implement your connection logic here
+        return null;
+    }
+}
+
+
 
