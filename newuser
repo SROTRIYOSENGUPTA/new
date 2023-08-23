@@ -1830,4 +1830,110 @@ public static Properties getSearchStatement(Connection conn, int searchId) throw
         return props;
     }
 
+///
+
+public static Properties getnewSearchStatement(SBeanMeta s, SBeanFieldMeta t) throws Exception
+    {
+
+        int sid = s.getsid();
+
+        if (statementHash.get(sid + "") != null)
+        {
+
+            return ((Properties) statementHash.get(sid + ""));
+
+        }
+
+        Properties props = new Properties();
+
+        try
+        {
+            // Here we extracting information from s and t here
+
+            String tables = s.gettables();
+
+            props.put(SQLSearchStatement.TABLES, tables);
+
+            String scondition = s.getscondition();
+
+            if (scondition != null && !scondition.isEmpty()) {
+
+
+                props.put(SQLSearchStatement.STANDARD_CONDITION, scondition);
+            }
+
+            String gcondition = s.getgcondition();
+
+            if (gcondition!= null && !gcondition.isEmpty()) {
+
+
+                props.put(SQLSearchStatement.GROUP_BY_CONDITION, gcondition);
+            }
+
+            String hcondition = s.gethcondition();
+
+            if (hcondition != null && !hcondition.isEmpty()) {
+
+
+                props.put(SQLSearchStatement.HAVING_CONDITION, hcondition);
+
+            }
+
+
+
+            int rppage = s.getrppage(); // rppage is used now
+
+            int recCount = rppage;
+
+            if (recCount > 0) {
+
+                props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, recCount);
+
+            }
+
+            else
+            {
+                String text = "Search id" + sid + " is not set up in T_Search";
+                log.error(" Error executing" );
+                log.error(text);
+                throw new Exception(text);
+            }
+
+
+            // List<SBeanFieldMeta> fields
+
+            /*
+              // hcondition == false
+             if (!conditions.isEmpty()) {
+
+                props.put(SQLSearchStatement.CONDITIONS, String.join("", conditions));
+            }*/
+
+
+            //if (recCount > 0) {
+               // props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, recCount);
+         //   }
+
+            String fieldName = t.getfieldName();
+
+            String expression = t.getExpression();
+
+            StringBuffer sb = new StringBuffer();
+
+            // List<SBeanFieldMeta> fields
+            
+           
+            
+            if (sb.length() > 1)
+            {
+                sb.append(", ");
+            }
+
+            if (fieldName != null && expression.equalsIgnoreCase(fieldName))
+            {
+                sb.append(" as ");
+
+                sb.append(fieldName);
+            }
+
 
