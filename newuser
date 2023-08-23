@@ -1592,4 +1592,109 @@ public class YourClass {
 
         return props;
 
+/////
+
+public static Properties getnewSearchStatement(Connection conn, SBeanMeta s, SBeanFieldMeta t) throws Exception {
+
+        int sid = s.getsid();
+
+        if (statementHash.get(sid + "") != null) {
+
+            return ((Properties) statementHash.get(sid + ""));
+
+        }
+
+        Properties props = new Properties();
+
+        try {
+            // Here we extracting information from s and t here
+
+            String tables = s.gettables();
+
+            List<String> conditions = new ArrayList<>();
+
+            String scondition = s.getscondition();
+
+            if (scondition != null && !scondition.isEmpty()) {
+
+                conditions.add("standard_condition_column" );
+
+            }
+
+            String gcondition = s.getgcondition();
+
+            if (gcondition!= null && !gcondition.isEmpty()) {
+
+                conditions.add("group_by_condition_column");
+            }
+
+            String hcondition = s.gethcondition();
+
+            if (hcondition != null && !hcondition.isEmpty()) {
+
+                conditions.add(" having_condition_column > 1000 ");
+
+            }
+
+
+            int rppage = s.getrppage();
+
+
+            props.put(SQLSearchStatement.TABLES, tables);
+
+            /*
+              // hcondition == false
+             if (!conditions.isEmpty()) {
+
+                props.put(SQLSearchStatement.CONDITIONS, String.join("", conditions));
+            }*/
+
+
+            //if (recCount > 0) {
+               // props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, recCount);
+         //   }
+
+            String fieldName = t.getfieldName();
+
+            String expression = t.getExpression();
+
+            if (!fieldName.isEmpty())
+            {
+
+                props.put(SQLSearchStatement.COLUMNS, fieldName);
+
+            }
+
+            if (!expression.isEmpty())
+            {
+
+                props.put(SQLSearchStatement.COLUMNS, expression);
+
+            }
+
+            else
+            {
+
+                String text = "Search id" + sid + " is not set up in T_SEARCHCOL";
+
+                log.error(text);
+
+                throw new Exception(text);
+            }
+
+            statementHash.put(sid + "", props);
+
+        }
+
+        catch (SQLException z) {
+
+            log.error("SQL Exception occurred: " + z.getMessage());
+
+            throw z;
+
+        }
+
+        return props;
+    }
+
 
