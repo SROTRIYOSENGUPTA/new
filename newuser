@@ -1522,3 +1522,76 @@ public class SqlSearch {
     }
 }
 
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+public class YourClass {
+
+    public static Properties getSSearchStatement(Connection conn, SBM sbmObject, SBFM sbfmObject) throws Exception {
+        int searchId = sbmObject.getSearchId();
+
+        if (statementHash.get(searchId + "") != null) {
+            return ((Properties) statementHash.get(searchId + ""));
+        }
+
+        Properties props = new Properties();
+
+        try {
+            // Extract information from sbmObject and sbfmObject
+            String tables = sbmObject.getTables();
+            List<String> conditions = new ArrayList<>();
+            
+            String standardCondition = sbmObject.getStandardCondition();
+            if (standardCondition != null && !standardCondition.isEmpty()) {
+                conditions.add(standardCondition);
+            }
+
+            String groupByCondition = sbfmObject.getGroupByCondition();
+            if (groupByCondition != null && !groupByCondition.isEmpty()) {
+                conditions.add(" group by " + groupByCondition);
+            }
+
+            String havingCondition = sbfmObject.getHavingCondition();
+            if (havingCondition != null && !havingCondition.isEmpty()) {
+                conditions.add(" having " + havingCondition);
+            }
+
+            int recCount = sbmObject.getRecordsPerPage();
+
+            // Populate properties based on extracted information
+            props.put(SQLSearchStatement.TABLES, tables);
+
+            if (!conditions.isEmpty()) {
+                props.put(SQLSearchStatement.CONDITIONS, String.join("", conditions));
+            }
+
+            if (recCount > 0) {
+                props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, recCount);
+            }
+
+            String columns = sbfmObject.getColumnExpressionsWithAliases();
+
+            if (!columns.isEmpty()) {
+                props.put(SQLSearchStatement.COLUMNS, columns);
+            } else {
+                String msg = "Search id " + searchId + " is not set up in T_SEARCHCOL";
+                log.error(msg);
+                throw new Exception(msg);
+            }
+
+            statementHash.put(searchId + "", props);
+        } catch (SQLException e) {
+            log.error("SQL Exception occurred: " + e.getMessage());
+            throw e;
+        } finally {
+            // Close resources, if needed
+        }
+
+        return props;
+    }
+}
+
+
