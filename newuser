@@ -1832,7 +1832,7 @@ public static Properties getSearchStatement(Connection conn, int searchId) throw
 
 ///
 
-public static Properties getnewSearchStatement(SBeanMeta s, SBeanFieldMeta t) throws Exception
+ public static Properties getnewSearchStatement(SBeanMeta s, SBeanFieldMeta t) throws Exception
     {
 
         int sid = s.getsid();
@@ -1935,5 +1935,47 @@ public static Properties getnewSearchStatement(SBeanMeta s, SBeanFieldMeta t) th
 
                 sb.append(fieldName);
             }
+            
 
 
+           /* if (!fieldName.isEmpty())
+            {
+
+                props.put(SQLSearchStatement.COLUMNS, fieldName);
+
+            } */
+
+
+
+            /*if (!expression.isEmpty())
+            {
+
+                props.put(SQLSearchStatement.COLUMNS, expression);
+
+            } */
+
+            else
+
+            {
+
+                String text = "Search id" + sid + " is not set up in T_SEARCHCOL";
+
+                log.error(text);
+
+                throw new Exception(text);
+            }
+
+            statementHash.put(sid + "", props);
+
+        }
+
+        catch (SQLException z) {
+
+            log.error("SQL Exception occurred: " + z.getMessage());
+
+            throw z;
+
+        }
+
+        return props;
+    }
