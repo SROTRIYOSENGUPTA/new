@@ -2240,227 +2240,92 @@ public static Properties getSearchStatement(Connection conn, int searchId) throw
 
 ////
 
- public static Properties getnewSearchStatement(String fileName) throws Exception
-    {
 
-        SBeanMeta s = new SBeanMeta();
 
-        int sid = s.getsid();
 
-        if (statementHash.get(sid + "") != null)
-        {
-
-            return ((Properties) statementHash.get(sid + ""));
+    public SBeanMetaUtil(ResourceLoader resourceLoader, Environment environment,
+            ObjectMapper objectMapper) {
+        this.resourceLoader = resourceLoader;
+        this.objectMapper = objectMapper;
+        this.sbeanFieldCache = new HashMap<>();
+        String[] profiles = environment.getActiveProfiles();
+        if (profiles != null && profiles.length > 0) {
+            activeProfiles = Arrays.asList(profiles);
+            Collections.reverse(activeProfiles);
+            reader = (fileName) -> readMetaFieldsForProfiles(fileName);
+        } else {
+            reader = (fileName) -> readMetaFields(fileName);
+            activeProfiles = Collections.emptyList();
         }
+    }
 
-        Properties props = new Properties();
-
-            // Here we extracting information from s and t here
-
-            String tables = s.gettables();
-
-            props.put(SQLSearchStatement.TABLES, tables);
-
-            // put condition for conditional logic
-       if(sid != 0) // this is the main condition for the conditional logic
-
-      {
-            System.out.println("Since SearchID is set up in t_search");
-            String scondition = s.getscondition();
-            if (scondition != null && !scondition.isEmpty())
-
-            {
-                props.put(SQLSearchStatement.STANDARD_CONDITION, scondition);
-            }
-
-            String gcondition = s.getgcondition();
-
-            if (gcondition!= null && !gcondition.isEmpty())
-            {
-                props.put(SQLSearchStatement.GROUP_BY_CONDITION, gcondition);
-            }
-
-            String hcondition = s.gethcondition();
-
-            if (hcondition != null && !hcondition.isEmpty())
-            {
-                props.put(SQLSearchStatement.HAVING_CONDITION, hcondition);
-
-            }
-
-            int rppage = s.getrppage(); // rppage is used now
-
-            if (rppage > 0)
-            {
-
-                props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, rppage);
-            }
-      }
-
-            else
-            {
-                String text = "Search id" + sid + " is not set up in T_Search";
-
-                log.error(" Error executing" );
-
-                log.error(text);
-
-                throw new Exception(text);
-            }
-
-           List<SBeanFieldMeta> t = s.getFields();
-
-           StringBuffer sb = new StringBuffer();
-
-           for(SBeanFieldMeta field : t)
-            {
-                String fieldname = field.getfieldName();
-
-                String expression = field.getExpression();
-
-                if (sb.length() > 1)
-                {
-                    sb.append(", ");
-                }
-
-                sb.append(expression);
-
-                if (fieldname != null && expression.equalsIgnoreCase(fieldname))
-                {
-                    sb.append(" as ");
-
-                    sb.append(fieldname);
-                }
-            }
-
-           props.put(SQLSearchStatement.COLUMNS, sb.toString());
-
-            try
-            {
-                String text = "Search id" + sid + " is not set up in T_SEARCHCOL";
-
-                log.error(text);
-
-                throw new Exception(text);
-            }
-
-            finally
-            {
-                statementHash.put(sid + "", props);
-
-            }
-
+    public List<SBeanFieldMeta> getSBeanFieldsMeta(String fileName) {
+        if (!sbeanFieldCache.containsKey(fileName)) {
+            logger.info(
+                "{} not present in cache for file : {} and active profiles : {}. Will do resource lookup.",
+                SBeanFieldMeta.class.getSimpleName(), fileName, activeProfiles);
+            sbeanFieldCache.put(fileName, reader.apply(fileName));
         }
+        return sbeanFieldCache.get(fileName);
+    }
 
-///
+    private List<SBeanFieldMeta> readMetaFields(String fileName) {
+        Resource resource = loadResourceFromClasspath(
+            SBEAN_META_DIR + PATH_SEPARATOR + fileName + JSON_EXTENSION);
+        return ordered(readMetaFields(resource));
+    }
 
- @SuppressWarnings("unused")
-    public static Properties getnewSearchStatement(String fileName) throws Exception
-    {
+    private Resource loadResourceFromClasspath(String path) {
+        return resourceLoader.getResource("classpath:" + path);
+    }
 
-        SBeanMeta s = new SBeanMeta();
-
-        int sid = s.getsid();
-
-        if (statementHash.get(sid + "") != null)
-        {
-
-            return ((Properties) statementHash.get(sid + ""));
+    private List<SBeanFieldMeta> readMetaFieldsForProfiles(String fileName) {
+        Set<SBeanFieldMeta> fields = new HashSet<>();
+        fields.addAll(readMetaFields(fileName));
+        for (String profile : activeProfiles) {
+            Resource resource = loadResourceFromClasspath(SBEAN_META_DIR + PATH_SEPARATOR + profile
+                + PATH_SEPARATOR + fileName + JSON_EXTENSION);
+            fields.addAll(readMetaFields(resource));
         }
+        return ordered(fields);
+    }
 
-        Properties props = new Properties();
-
-            // Here we extracting information from s and t here
-
-            String tables = s.gettables();
-
-            props.put(SQLSearchStatement.TABLES, tables);
-
-            // put condition for conditional logic
-
-            // if s has no data modify the method
-
-         // perform the same logic for the same loop that you would like to generate
-
-
-       
-       if(s == null)
-
-      {
-            System.out.println("Since SearchID is set up in t_search");
-            String scondition = s.getscondition();
-            if (scondition != null && !scondition.isEmpty())
-
-            {
-                props.put(SQLSearchStatement.STANDARD_CONDITION, scondition);
-            }
-
-            String gcondition = s.getgcondition();
-
-            if (gcondition!= null && !gcondition.isEmpty())
-            {
-                props.put(SQLSearchStatement.GROUP_BY_CONDITION, gcondition);
-            }
-
-            String hcondition = s.gethcondition();
-
-            if (hcondition != null && !hcondition.isEmpty())
-            {
-                props.put(SQLSearchStatement.HAVING_CONDITION, hcondition);
-            }
-
-            int rppage = s.getrppage(); // rppage is used now
-
-            if (rppage > 0)
-            {
-
-                props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, rppage);
-            }
-      }
-       
-       else
-       {
-           System.out.println("No data is avaiable in object s of SBeanMeta");
-
-           String text = "Search id" + sid + " is not set up in T_Search";
-
-           log.error(" Error executing" );
-
-           log.error(text);
-
-           throw new Exception(text);
-       }
-
-           List<SBeanFieldMeta> t = s.getFields();
-
-           StringBuffer sb = new StringBuffer();
-
-           for(SBeanFieldMeta field : t)
-            {
-                String fieldname = field.getfieldName();
-
-                String expression = field.getExpression();
-
-                if (sb.length() > 1)
-                {
-                    sb.append(", ");
+    private Set<SBeanFieldMeta> readMetaFields(Resource resource) {
+        if (resource.exists()) {
+            try (InputStream inputStream = resource.getInputStream()) {
+                SBeanMeta beanMeta = objectMapper.readValue(inputStream, SBeanMeta.class);
+                if (beanMeta != null && beanMeta.fields != null && !beanMeta.fields.isEmpty()) {
+                    return beanMeta.fields.stream().map(field -> getHyphenatedMetaFields(field))
+                        .flatMap(Set::stream).collect(toSet());
                 }
-
-                sb.append(expression);
-
-                if (fieldname != null && expression.equalsIgnoreCase(fieldname))
-                {
-                    sb.append(" as ");
-
-                    sb.append(fieldname);
-                }
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
             }
-
-           props.put(SQLSearchStatement.COLUMNS, sb.toString());
-
-           return props;
-
         }
+        return Collections.emptySet();
+    }
 
-      //  return props;
-      // this performs the same task as the getsearch which finds the statement
+    private List<SBeanFieldMeta> ordered(Set<SBeanFieldMeta> fieldMetas) {
+        return new ArrayList<>(fieldMetas).stream().sorted(comparator())
+            .collect(Collectors.toList());
+    }
+
+    private Comparator<SBeanFieldMeta> comparator() {
+        return comparing(SBeanFieldMeta::getDisplayOrder, nullsLast(Integer::compareTo))
+            .thenComparing(SBeanFieldMeta::getFieldName, nullsLast(String::compareTo));
+    }
+
+    private Set<SBeanFieldMeta> getHyphenatedMetaFields(SBeanFieldMeta field) {
+        if (field.nestedFields == null || field.nestedFields.isEmpty()) {
+            return new HashSet<>(Arrays.asList(field));
+        } else {
+            String parentName = field.fieldName;
+            return field.nestedFields.stream().map(f -> {
+                f.fieldName = parentName + "-" + f.fieldName;
+                return getHyphenatedMetaFields(f);
+            }).flatMap(Set::stream).collect(toSet());
+        }
+    }
+
+}
+
