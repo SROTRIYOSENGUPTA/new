@@ -2243,6 +2243,14 @@ public static Properties getSearchStatement(Connection conn, int searchId) throw
 
 
 
+   public final class SBeanMetaUtil {
+    private static final Logger logger = LoggerFactory.getLogger(SBeanMetaUtil.class);
+    private final ResourceLoader resourceLoader;
+    private final ObjectMapper objectMapper;
+    private final Function<String, List<SBeanFieldMeta>> reader;
+    private final List<String> activeProfiles;
+    private Map<String, List<SBeanFieldMeta>> sbeanFieldCache;
+
     public SBeanMetaUtil(ResourceLoader resourceLoader, Environment environment,
             ObjectMapper objectMapper) {
         this.resourceLoader = resourceLoader;
@@ -2252,14 +2260,17 @@ public static Properties getSearchStatement(Connection conn, int searchId) throw
         if (profiles != null && profiles.length > 0) {
             activeProfiles = Arrays.asList(profiles);
             Collections.reverse(activeProfiles);
-            reader = (fileName) -> readMetaFieldsForProfiles(fileName);
+            reader = (fileName) -> readMetaFieldsForProfiles(fileName); // active profiles
         } else {
-            reader = (fileName) -> readMetaFields(fileName);
+            reader = (fileName) -> readMetaFields(fileName); // if profiles are not active
             activeProfiles = Collections.emptyList();
         }
     }
 
-    public List<SBeanFieldMeta> getSBeanFieldsMeta(String fileName) {
+    // call the two classes SBeanMeta and SBeanFieldsMeta
+    // utilize their objects in order to sustain this class
+
+    public List<SBeanFieldMeta> getSBeanFieldsMeta(String fileName) { // getSBeanFieldsMeta --- this is getting the SBeanFieldsMeta from the call
         if (!sbeanFieldCache.containsKey(fileName)) {
             logger.info(
                 "{} not present in cache for file : {} and active profiles : {}. Will do resource lookup.",
@@ -2269,17 +2280,17 @@ public static Properties getSearchStatement(Connection conn, int searchId) throw
         return sbeanFieldCache.get(fileName);
     }
 
-    private List<SBeanFieldMeta> readMetaFields(String fileName) {
+    private List<SBeanFieldMeta> readMetaFields(String fileName) { // readMetaFields -- this is reading MetaFields
         Resource resource = loadResourceFromClasspath(
             SBEAN_META_DIR + PATH_SEPARATOR + fileName + JSON_EXTENSION);
         return ordered(readMetaFields(resource));
     }
 
-    private Resource loadResourceFromClasspath(String path) {
+    private Resource loadResourceFromClasspath(String path) {  // loadResourceFromClasspath --  this is loading the resource from the classpath
         return resourceLoader.getResource("classpath:" + path);
     }
 
-    private List<SBeanFieldMeta> readMetaFieldsForProfiles(String fileName) {
+    private List<SBeanFieldMeta> readMetaFieldsForProfiles(String fileName) {  // readMetaFieldsForProfiles -- this is reading the metadata fields with and without considering profiles
         Set<SBeanFieldMeta> fields = new HashSet<>();
         fields.addAll(readMetaFields(fileName));
         for (String profile : activeProfiles) {
@@ -2290,7 +2301,7 @@ public static Properties getSearchStatement(Connection conn, int searchId) throw
         return ordered(fields);
     }
 
-    private Set<SBeanFieldMeta> readMetaFields(Resource resource) {
+    private Set<SBeanFieldMeta> readMetaFields(Resource resource) {  // readMetaFields -- this is reading the metaFields and returns them in an ordered list
         if (resource.exists()) {
             try (InputStream inputStream = resource.getInputStream()) {
                 SBeanMeta beanMeta = objectMapper.readValue(inputStream, SBeanMeta.class);
@@ -2305,17 +2316,17 @@ public static Properties getSearchStatement(Connection conn, int searchId) throw
         return Collections.emptySet();
     }
 
-    private List<SBeanFieldMeta> ordered(Set<SBeanFieldMeta> fieldMetas) {
+    private List<SBeanFieldMeta> ordered(Set<SBeanFieldMeta> fieldMetas) {  // ordered -- this returns the SBeanFieldMeta into an ordered list of SBeanFieldMeta
         return new ArrayList<>(fieldMetas).stream().sorted(comparator())
             .collect(Collectors.toList());
     }
 
-    private Comparator<SBeanFieldMeta> comparator() {
+    private Comparator<SBeanFieldMeta> comparator() {  // comparator
         return comparing(SBeanFieldMeta::getDisplayOrder, nullsLast(Integer::compareTo))
             .thenComparing(SBeanFieldMeta::getFieldName, nullsLast(String::compareTo));
     }
 
-    private Set<SBeanFieldMeta> getHyphenatedMetaFields(SBeanFieldMeta field) {
+    private Set<SBeanFieldMeta> getHyphenatedMetaFields(SBeanFieldMeta field) {  // getHyphenatedMetaFields
         if (field.nestedFields == null || field.nestedFields.isEmpty()) {
             return new HashSet<>(Arrays.asList(field));
         } else {
@@ -2328,4 +2339,3 @@ public static Properties getSearchStatement(Connection conn, int searchId) throw
     }
 
 }
-
