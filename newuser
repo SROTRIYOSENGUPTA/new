@@ -2454,7 +2454,299 @@ public final class SBeanMetaUtil {
 
 ////
 
-public static String buildSearchSQL(Properties props, String customTableString,
+public class SQLSearchStatement {
+    private static Logger log = Logger.getLogger(SQLSearchStatement.class.getName());
+
+    final public static String TABLES                = "T";
+    final public static String COLUMNS                = "C";
+    final public static String STANDARD_CONDITION    = "SC";
+    final public static String GROUP_BY_CONDITION    = "GB";
+    final public static String HAVING_CONDITION        = "HC";
+    final public static String DEFAULT_RECORD_COUNT = "RC";
+
+    private static Hashtable statementHash = new Hashtable();
+
+    public static String buildSearchSQL(Connection conn, int searchId, String customTableString,
+            String preCondition, String postCondition, String orderBy, String sortOrder,
+            SearchInfo colInfo) throws SQLException, Exception {
+        Properties props = getSearchStatement(conn, searchId);
+        return buildSearchSQL(props, customTableString, preCondition, postCondition, orderBy,
+                sortOrder, colInfo, null);
+    }
+
+    public static String buildSearchSQL(Connection conn, int searchId, String preCondition,
+            String postCondition, String orderBy, String sortOrder, SearchInfo colInfo,
+            String havingCondition) throws SQLException, Exception {
+        Properties props = getSearchStatement(conn, searchId);
+        return buildSearchSQL(props, null, preCondition, postCondition, orderBy, sortOrder, colInfo,
+                havingCondition);
+    }
+
+    public static String buildSearchSQL(Connection conn, int searchId, String preCondition,
+            String postCondition, String orderBy, SearchInfo colInfo)
+                    throws SQLException, Exception {
+        Properties props = getSearchStatement(conn, searchId);
+        return buildSearchSQL(props, null, preCondition, postCondition, orderBy, null, colInfo,
+                null);
+    }
+
+    public static Properties getSearchStatement(Connection conn, int searchId) throws SQLException, Exception
+    {
+
+
+
+        if(statementHash.get(searchId+"") != null)
+
+        {
+
+            return ((Properties)statementHash.get(searchId+""));
+
+        }
+
+        Properties props = new Properties();
+
+        Statement stmt = conn.createStatement();
+
+        // get main statement
+        String sql = "select Tables, Standard_Condition, Group_By_Condition, Having_Condition , Records_Per_Page from t_Search where search_id = " + searchId;
+
+        // this sql method is getting tables, standard_condition, group_by_condition, having_condition, records_per_page as output and getting them from t_search with a specific search_id
+
+
+        ResultSet rs = stmt.executeQuery(sql);
+
+        if (rs.next())
+
+        {
+            String tables = rs.getString(1);
+
+            String standardCondition = rs.getString(2);
+
+            String groupByCondition = rs.getString(3);
+
+            String havingCondition = rs.getString(4);
+
+            props.put(SQLSearchStatement.TABLES, tables);
+
+            if (standardCondition != null && !standardCondition.equals(""))
+            {
+                props.put(SQLSearchStatement.STANDARD_CONDITION, standardCondition);
+            }
+            if (groupByCondition != null && !groupByCondition.equals(""))
+
+            {
+                props.put(SQLSearchStatement.GROUP_BY_CONDITION, " group by " + groupByCondition);
+
+            }
+            if (havingCondition != null && !havingCondition.equals("")) {
+
+                props.put(SQLSearchStatement.HAVING_CONDITION, " having " + havingCondition);
+
+            }
+
+            int recCount = rs.getInt(5);
+
+            if(recCount > 0) {
+
+                props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT,new Integer(recCount));
+            }
+        }
+
+        else
+
+        {
+            String msg = "Search id " + searchId + " is not set up in T_SEARCH";
+
+            log.error("Error executing:" + sql);
+
+            log.error(msg);
+
+            throw new Exception(msg);
+        }
+
+        rs.close();
+
+
+        // get columns
+        sql = "select Col_Expression, Col_Alias from t_SearchCol where search_id = " + searchId + " order by col_id";
+
+        rs = stmt.executeQuery(sql);
+
+        StringBuffer sb = new StringBuffer();
+
+        while (rs.next()) {
+
+            if (sb.length() > 1) {
+
+                sb.append(", ");
+
+            }
+
+            sb.append(rs.getString(1));
+
+            if (rs.getString(2) != null && !rs.getString(1).equalsIgnoreCase(rs.getString(2))) {
+
+                sb.append(" as ");
+
+                sb.append(rs.getString(2));
+
+            }
+        }
+
+        rs.close();
+
+        if (sb.length() > 1) {
+
+            props.put(SQLSearchStatement.COLUMNS, sb.toString());
+
+        }
+
+        else
+
+        {
+            String msg = "Search id " + searchId + " is not set up in T_SEARCHCOL";
+
+            log.error("Error executing:" + sql);
+
+            log.error(msg);
+
+            throw new Exception(msg);
+
+        }
+
+        stmt.close();
+
+        statementHash.put(searchId+"" , props);
+
+        return props;
+    }
+
+    @SuppressWarnings("unused")
+
+    public static Properties getnewSearchStatement(String fileName) throws Exception
+    {
+
+        SBeanMeta s = new SBeanMeta();
+        Properties props = new Properties();
+
+
+
+            // put condition for conditional logic
+
+            // if s has no data modify the method
+
+         // perform the same logic for the same loop that you would like to generate
+
+         // if s is null here it will give a null pointer exception even before it reaches the s condition here
+
+
+
+       if(s != null)
+
+      {
+
+           int sid = s.getsid();
+
+           if (statementHash.get(sid + "") != null)
+           {
+
+               return ((Properties) statementHash.get(sid + ""));
+           }
+
+
+
+               // Here we extracting information from s and t here
+
+               String tables = s.gettables();
+
+            props.put(SQLSearchStatement.TABLES, tables);
+            String scondition = s.getscondition();
+            if (scondition != null && !scondition.isEmpty())
+
+            {
+                props.put(SQLSearchStatement.STANDARD_CONDITION, scondition);
+            }
+
+            String gcondition = s.getgcondition();
+
+            if (gcondition!= null && !gcondition.isEmpty())
+            {
+                props.put(SQLSearchStatement.GROUP_BY_CONDITION, gcondition);
+            }
+
+            String hcondition = s.gethcondition();
+
+            if (hcondition != null && !hcondition.isEmpty())
+            {
+                props.put(SQLSearchStatement.HAVING_CONDITION, hcondition);
+            }
+
+            int rppage = s.getrppage(); // rppage is used now
+
+            if (rppage > 0)
+            {
+
+                props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, rppage);
+            }
+      }
+
+       else
+       {
+           System.out.println("No data is avaiable in object s of SBeanMeta");
+
+           String text = "Search id" + sid + " is not set up in T_Search";
+
+           log.error(" Error executing" );
+
+           log.error(text);
+
+           throw new Exception(text);
+       }
+
+           List<SBeanFieldMeta> t = s.getFields();
+
+           StringBuffer sb = new StringBuffer();
+
+           for(SBeanFieldMeta field : t)
+            {
+                String fieldname = field.getfieldName();
+
+                String expression = field.getExpression();
+
+                if (sb.length() > 1)
+                {
+                    sb.append(", ");
+                }
+
+                sb.append(expression);
+
+                if (fieldname != null && expression.equalsIgnoreCase(fieldname))
+                {
+                    sb.append(" as ");
+
+                    sb.append(fieldname);
+                }
+            }
+
+           props.put(SQLSearchStatement.COLUMNS, sb.toString());
+
+           return props;
+         }
+
+      //  return props;
+      // this performs the same task as the getsearch which finds the statement
+
+    public PreparedStatement getNewSearchColStatement(Connection con, int searchId) throws SQLException
+        {
+        String tsearchcolTableName = "tsearchcol"; // Replace with the actual table name
+
+        String query = "SELECT * FROM " + tsearchcolTableName + " WHERE searchId = ?";
+        PreparedStatement preparedStatement = con.prepareStatement(query);
+        preparedStatement.setInt(1, searchId);
+        return preparedStatement;
+    }
+
+        public static String buildSearchSQL(Properties props, String customTableString,
             String preCondition, String postCondition, String orderBy, String sortOrder,
             SearchInfo colInfo, String havingCondition) {
         StringBuffer sb = new StringBuffer();
@@ -2535,5 +2827,6 @@ public static String buildSearchSQL(Properties props, String customTableString,
 
         return sb.toString();
     }
-
-
+        
+      
+}
