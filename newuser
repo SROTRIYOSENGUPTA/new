@@ -2454,57 +2454,315 @@ public final class SBeanMetaUtil {
 
 ////
 
-public String buildSearchSQL(Properties props, String customTableString,
-            String preCondition, String postCondition, String orderBy, String sortOrder,
-            SearchInfo colInfo, String havingCondition) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("select ");
+ public Integer depoId; // depository
 
-        if (colInfo != null && colInfo.getColName() != null && colInfo.getColName().length > 0) {
-            String[] colNames = colInfo.getColName();
-            int i = 0;
-            for (i = 0; i < colNames.length - 1; i++) {
-                sb.append(colNames[i]).append(", ");
-            }
+  public Integer sid; // search_id column
 
-            sb.append(colNames[i]).append(" ");
-        } else {
-            sb.append(" * ");
-        }
+  public Integer cid; // column_id column
 
-        sb.append(" from (select ");
+  public Integer key; // col is_key column
 
-        // Using Sbfm to generate the columns and filters
-        String columnStr = Sbfm.generateColumns(props);
-        if (columnStr == null) {
-            return null;
-        }
+  public Integer req; // required column
 
-        sb.append(columnStr);
-        sb.append(" from ");
+  public Integer sort; // sortable column
 
-        if (customTableString != null) {
-            sb.append(customTableString).append(" ");
-        }
+  public String format; // ui format column
 
-        // Using Sbm to generate the table and join clauses
-        sb.append(Sbm.generateTableAndJoinClause());
+  public Integer filter; // input filter column
 
-        if (props.containsKey(SQLSearchStatement.STANDARD_CONDITION) || preCondition != null) {
-            sb.append(" where ");
-        }
+  public String expression; //col exp column
 
-        // Using Sbfm to generate filter conditions
-        sb.append(Sbfm.generateFilterCondition(props));
+  public String fieldName; //col alias column
 
-        if (preCondition != null) {
-            sb.append(" and (").append(preCondition).append(")");
-        }
+  public boolean hidden; //visible column
 
-        // ... other parts of the query ...
+  public String label; //disp name column
 
-        return sb.toString();
-    }
+  public String type; //disp format column
 
-    // ... other methods ...
+  public Integer displayOrder; //disp order column
+
+  //public SBeanFieldQueryMeta query;
+
+  public String source;
+
+  public boolean summarizer;
+
+  public List<SBeanFieldMeta> nestedFields;
+
+ // public List<Formatter> formatters;
+
+  public List<Long> accounts;
+
+  // columns that these have to be in line with are search_id, col_id, col_expression, col_alias, disp_name, disp_format, is_key, required
+
+  // visible, sortable, disp_order, ui_format, input_filter
+
+  // these are from t_search and t_searchcol respectively
+
+ // public SBeanFieldMeta() //
+//  {
+
+ // }
+
+  public SBeanFieldMeta(String fieldName, String label)
+  {
+      this.fieldName = fieldName; // this is for col_alias
+
+      this.label = label; // this is for display name
+  }
+
+  /**
+   * @return the accounts
+   */
+  public List<Long> getAccounts()
+  {
+      return accounts; // this will return the accounts
+  }
+
+  /**
+   * @param accounts the accounts to set
+   */
+
+  public Integer getDepoId()
+  {
+      return depoId; // this will return depoId
+  }
+
+  public Integer sid()
+  {
+      return sid; // this will return search_id
+  }
+
+  public Integer cid()
+  {
+      return cid; // this will return cid
+  }
+  /**
+   * @param depoID the depoID to set
+   */
+  public Integer key()
+  {
+      return key; // this will return key
+  }
+  public Integer req()
+  {
+      return req; // this will return req
+  }
+
+  public Integer sort()
+  {
+      return sort; // this will return sort
+  }
+
+  public Integer filter()
+  {
+      return filter; // this will return filter
+  }
+
+  public void setAccounts(List<Long> accounts)
+  {
+      this.accounts = accounts; // this will create an instance called accounts
+  }
+
+  /**
+   * @return the depoID
+   */
+
+  public void setDepoId(Integer depoId)
+  {
+      this.depoId = depoId; // this will create an instance called depoId
+  }
+
+  /**
+   * @return the label
+   */
+
+  public String getExpression()
+  {
+      return expression; // this represents col_expression
+  }
+
+  public String getFieldName()
+  {
+      return fieldName; // this wil return the field name
+  }
+
+  public String getLabel()
+  {
+      return label; // this will return the label
+  }
+
+  /**
+   * @return the query
+   */
+ // public SBeanFieldQueryMeta getQuery()
+ // {
+ //     return query; // this will return the query
+ // }
+
+  /**
+   * @return the source
+   */
+  public String getSource()
+  {
+      return source; // this will return the source
+  }
+
+  /**
+   * @return the type
+   */
+  public String getType()
+  {
+      return type; // this will return the disp_format column as output
+  }
+
+  /**
+   * @return the summarizer
+   */
+  public boolean isSummarizer()
+  {
+      return summarizer; // this will return the summarizer
+  }
+
+  /**
+   * @param label
+   *            the label to set
+   */
+
+  public void setLabel(String label)
+  {
+      this.label = label; // this will create an instance caled label
+  }
+
+  /**
+   * @param query
+   *            the query to set
+   */
+ // public void setQuery(SBeanFieldQueryMeta query)
+  //{
+  //    this.query = query; // this creates an instance query
+  //}
+
+  /**
+   * @param source
+   *            the source to set
+   */
+  public void setSource(String source)
+  {
+      this.source = source; // this creates an instance source
+  }
+
+  /**
+   * @param summarizer
+   *            the summarizer to set
+   */
+  public void setSummarizer(boolean summarizer)
+{
+      this.summarizer = summarizer; // this creates an instance summarizer
+  }
+
+  /**
+   * @param type
+   *            the type to set
+   */
+  public void setType(String type)
+  {
+      this.type = type; // this creates an instance of type called type
+  }
+
+  /**
+   * @return the expression
+   */
+
+
+  /**
+   * @param expression the expression to set
+   */
+  public void setExpression(String expression)
+  {
+      this.expression = expression; // this represents the expression instance of a classs
+  }
+
+
+
+  public void setFieldName(String fieldName)
+  {
+      this.fieldName = fieldName; // this represents the field name instance of a class
+  }
+
+  public boolean isHidden()
+  {
+      return hidden; // this returns hidden which is of boolean type
+  }
+
+  public void setHidden(boolean hidden)
+  {
+      this.hidden = hidden; // this creates an instance of hidden
+  }
+
+  public List<SBeanFieldMeta> getNestedFields()
+  {
+      return nestedFields; // this returns nestesFields which is in a list
+  }
+
+  public void setNestedFields(List<SBeanFieldMeta> nestedFields)
+  {
+      this.nestedFields = nestedFields; // this represents the nested fields instance of a class
+  }
+
+  //public List<Formatter> getFormatters()
+  // {
+  //    return formatters; // this returns formatters as output
+  // }
+
+  // public void setFormatters(List<Formatter> formatters)
+  // {
+  //    this.formatters = formatters; // this represents the formatters instance of a class
+  // }
+
+  @Override
+  public int hashCode()
+  {
+      final int prime = 31;
+      int result = 1;
+      result = prime * result + ((fieldName == null) ? 0 : fieldName.hashCode());
+      return result; // this will return the result as output
+  }
+
+  @Override
+  public boolean equals(Object obj) // this boolean object here is equals. This will only return true or false
+  {
+      if (this == obj) { // if the value of this is equal to that of obj
+          return true;
+      }
+      if (obj == null) { // if the value of obj is equal to that if null or it doesn't have any values
+          return false;
+      }
+      if (getClass() != obj.getClass()) { // if the getClass object and obj.getClass objects have the same value
+          return false; // this will return false as output
+      }
+      SBeanFieldMeta other = (SBeanFieldMeta) obj;
+      if (fieldName == null) { // if the fieldName here has null value or nothing at all
+          if (other.fieldName != null) {
+              return false; // this will give false as the output on console
+          }
+      } else if (!fieldName.equals(other.fieldName)) { // if whatever is not inside the value of other.fieldname is nothing
+          return false; // this will give false as the output
+      }
+      return true;
+  }
+
+  public Integer getDisplayOrder()
+  {
+      return displayOrder; // this will return the displayOrder as output
+  }
+
+  public void setDisplayOrder(Integer displayOrder)
+  {
+      this.displayOrder = displayOrder; // this represents the displayOrder instance of a class
+  }
+
+
+
 }
