@@ -2451,3 +2451,89 @@ public final class SBeanMetaUtil {
 }
 // this is the end of SBeanMetaUtil.java
 
+
+////
+
+public static String buildSearchSQL(Properties props, String customTableString,
+            String preCondition, String postCondition, String orderBy, String sortOrder,
+            SearchInfo colInfo, String havingCondition) {
+        StringBuffer sb = new StringBuffer();
+        sb.append("select ");
+
+        if (colInfo != null && colInfo.getColName() != null && colInfo.getColName().length > 0) {
+            String[] colNames = colInfo.getColName();
+            int i = 0;
+            for (i = 0; i < colNames.length - 1; i++) {
+                sb.append(colNames[i] + ", ");
+            }
+
+            sb.append(colNames[i] + " ");
+        } else {
+            sb.append(" * ");
+        }
+
+        sb.append(" from (select ");
+
+        // sb.append ("select * from (select ");
+        // Can't build valid query if the display column definition is not
+        // available.
+        String columnStr = props.getProperty(SQLSearchStatement.COLUMNS);
+        if (columnStr == null) {
+            return null;
+        }
+
+        sb.append(columnStr);
+        sb.append(" from ");
+        if (customTableString != null) {
+            sb.append(customTableString + " ");
+        }
+
+        sb.append(props.getProperty(SQLSearchStatement.TABLES));
+
+        if (props.containsKey(SQLSearchStatement.STANDARD_CONDITION) || preCondition != null) {
+            sb.append(" where ");
+        }
+
+        if (props.containsKey(SQLSearchStatement.STANDARD_CONDITION) && preCondition != null) {
+            sb.append(props.getProperty(SQLSearchStatement.STANDARD_CONDITION));
+            sb.append(" and (");
+            sb.append(preCondition);
+            sb.append(")");
+        } else if (props.containsKey(SQLSearchStatement.STANDARD_CONDITION) && preCondition == null) {
+            sb.append(props.getProperty(SQLSearchStatement.STANDARD_CONDITION));
+        } else if (!props.containsKey(SQLSearchStatement.STANDARD_CONDITION)
+                && preCondition != null) {
+            sb.append(preCondition);
+        }
+
+        if (props.containsKey(SQLSearchStatement.GROUP_BY_CONDITION)) {
+            sb.append(props.getProperty(SQLSearchStatement.GROUP_BY_CONDITION));
+        }
+
+        if (props.containsKey(SQLSearchStatement.HAVING_CONDITION)) {
+            sb.append(props.getProperty(SQLSearchStatement.HAVING_CONDITION));
+        } else if (StringUtils.isNotEmpty(havingCondition)) {
+            String havCond = havingCondition.toUpperCase().replaceFirst("AND", " ");
+            sb.append(" having " + havCond);
+        }
+
+        sb.append(") A ");
+
+        if (postCondition != null) {
+            sb.append("where ");
+            sb.append(postCondition);
+        }
+
+        if (orderBy != null) {
+            sb.append(" order by ");
+            sb.append(orderBy);
+
+            if (sortOrder != null) {
+                sb.append(" " + sortOrder);
+            }
+        }
+
+        return sb.toString();
+    }
+
+
