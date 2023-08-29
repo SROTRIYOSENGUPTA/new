@@ -2543,4 +2543,137 @@ ublic class SQLSearchStatement {
     }
 }
 
+////
+
+public class SBeanMeta { // this is the start of the class SBeanMeta
+
+    public EvaluatorType evaluatorType;
+
+    public List<String> extraStaticImports;
+
+    public List<SBeanFieldMeta> fields; // this shows that we are calling the SBeanFieldMeta class here
+
+    public int i;
+
+    public int si;
+
+    public int snames;
+
+    public String tables;
+
+    public String scondition;
+
+    public String gcondition;
+
+
+     /// search name query json to java object
+
+    // search_id, search_name, tables, standard condition, groupbycondition
+
+    // having_condition, search_description, records_per_page, friendly_name, post_interceptor
+
+    // find out how SBeanFielddMeta and SBeanMeta are related like in terms of code
+
+    // do i have to call both together and how will they run
+
+    // while running do i have to import any additional packages as i have already represented
+
+    // all the other objects on SBeanFieldMeta.java
+
+
+    public int getsnames()
+    {
+        return snames;
+    }
+    public void setsnames(int snames)
+    {
+        SBeanMeta.snames = snames;
+    }
+    public String gettables()
+    {
+        return tables;
+    }
+    public void settables(String tables)
+    {
+        SBeanMeta.tables = tables;
+    }
+    public String getscondition()
+    {
+        return scondition;
+    }
+    public void setscondition(String scondition)
+    {
+        SBeanMeta.scondition = scondition;
+    }
+    public String getgcondition()
+    {
+        return gcondition;
+    }
+    public void setscondition(String gcondition)
+    {
+        SBeanMeta.gcondition = gcondition;
+    }
+
+    public int snames()
+    {
+        return snames;
+    }
+    public String tables()
+    {
+        return tables;
+    }
+    public String scondition()
+    {
+        return scondition;
+    }
+    public String gcondition()
+    {
+        return gcondition;
+    }
+
+    public EvaluatorType getEvaluatorType()
+    {
+        return evaluatorType; // this will give evaluatorType as output
+    }
+
+    public void setEvaluatorType(EvaluatorType evaluatorType)
+    {
+        this.evaluatorType = evaluatorType; // this will represent an instance of evaluatorType
+    }
+
+    public List<SBeanFieldMeta> getFields()
+    {
+        return fields; // this will give fields as output
+    }
+
+    public void setFields(List<SBeanFieldMeta> fields)
+    {
+        this.fields = fields; // this will represent an instance of fields
+    }
+
+    public List<String> getExtraStaticImports()
+    {
+        return extraStaticImports; // this will give extraStaticImports as output
+    }
+
+    public void setExtraStaticImports(List<String> extraStaticImports)
+    {
+        this.extraStaticImports = extraStaticImports;// this will create an instance of extraStaticImports as output
+    }
+
+    /*public String tables()
+    {
+        return tables;
+    }
+    */
+
+
+
+
+
+}
+
+// this is the end of the program
+
+
 
