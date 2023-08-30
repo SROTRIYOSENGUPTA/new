@@ -3754,5 +3754,81 @@ public final class SBeanMetaUtil {
 
 Replace search logic using t_search and t_searchcol. Instead of using DB tables use java objects (SBeanMeta and SBeanFieldMeta). Ensure these objects are in line with t_search and t_searchcol Enhance SBeanMetaUtil to not only parse and return field but to do SBeanMeta as well and store fields in list on object returning the object. APP code will need to adjust where it uses t_search and t_searchcol to swap to new flow.
 
+import java.util.List;
+
+public class SBeanFieldMeta {
+    // Fields and methods related to t_searchcol
+    // ... (existing code)
+
+    // Additional methods for SBeanFieldMeta
+    public boolean isSortable() {
+        return sort != null && sort == 1;
+    }
+
+    // Other methods as needed
+}
+
+public class SBeanMeta {
+    // Fields and methods related to t_search
+    // ... (existing code)
+
+    // Additional methods for SBeanMeta
+    public String buildSearchSQL() {
+        // Construct the SQL query based on fields and conditions
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT ");
+
+        // Append selected columns
+        List<String> selectedColumns = SBeanMetaUtil.generateSelectedColumns(fields);
+        query.append(String.join(", ", selectedColumns));
+
+        // Append FROM and JOIN clauses
+        query.append(" FROM ");
+        query.append(tables);
+
+        // Append WHERE clause
+        String filterCondition = SBeanMetaUtil.generateFilterConditions(fields);
+        if (!filterCondition.isEmpty()) {
+            query.append(" WHERE ").append(filterCondition);
+        }
+
+        // Append GROUP BY and HAVING clauses
+        if (groupByCondition != null && !groupByCondition.isEmpty()) {
+            query.append(" GROUP BY ").append(groupByCondition);
+        }
+        if (havingCondition != null && !havingCondition.isEmpty()) {
+            query.append(" HAVING ").append(havingCondition);
+        }
+
+        // Append ORDER BY clause
+        if (orderBy != null && !orderBy.isEmpty()) {
+            query.append(" ORDER BY ").append(orderBy);
+            if (sortOrder != null && !sortOrder.isEmpty()) {
+                query.append(" ").append(sortOrder);
+            }
+        }
+
+        return query.toString();
+    }
+
+    // Other methods as needed
+}
+
+public class SBeanMetaUtil {
+    // Utility methods for generating SQL query components
+    public static List<String> generateSelectedColumns(List<SBeanFieldMeta> fields) {
+        // Generate the list of selected columns based on fields
+        // ... (implementation)
+    }
+
+    public static String generateFilterConditions(List<SBeanFieldMeta> fields) {
+        // Generate the WHERE clause conditions based on filterable fields
+        // ... (implementation)
+    }
+
+    // Other utility methods as needed
+}
+
+
 
 
