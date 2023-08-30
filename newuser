@@ -2786,6 +2786,39 @@ public List<SBeanFieldMeta> getSBeanFieldsMeta(String fileName) { // getSBeanFie
         return sbeanFieldCache.get(fileName);
     }
 
+public List<SBeanFieldMeta> getSBeanFieldsMeta(String fileName) {
+    if (!sbeanFieldCache.containsKey(fileName)) {
+        logger.info(
+            "{} not present in cache for file : {} and active profiles : {}. Will do resource lookup.",
+            SBeanFieldMeta.class.getSimpleName(), fileName, activeProfiles);
+
+        sbeanFieldCache.put(fileName, reader.apply(fileName));
+
+        List<SBeanFieldMeta> sbeanFields = reader.apply(fileName);
+
+        List<Object> parsedFields = new ArrayList<>();
+        parsedFields.addAll(sbeanFields);
+
+        // Generate columns using SbmUtil
+        String columnStr = SbmUtil.generateColumns(sbeanFields);
+
+        // Generate filter conditions using SbmUtil
+        String filterConditions = SbmUtil.generateFilterConditions(sbeanFields);
+
+        // ... use columnStr and filterConditions as needed ...
+
+        // You might also need to use parsedFields in your logic,
+        // if that's related to SBeanMeta.parseFields, you'll need to adjust this part
+        // List<SBeanMeta> SBeanMeta = SBeanMeta.parseFields(sbeanFields);
+        // parsedFields.addAll(SBeanMeta);
+
+        // MetaDataObject metadata = new MetaDataObject(sbeanFields, SBeanMeta);
+        // sbeanFieldcache.put(fileName, metadataObject);
+    }
+    return sbeanFieldCache.get(fileName);
+}
+
+
 
 
 
