@@ -2756,6 +2756,36 @@ public class SBeanMetaUtil {
     // Other utility methods as needed
 }
 
+//
+public List<SBeanFieldMeta> getSBeanFieldsMeta(String fileName) { // getSBeanFieldsMeta --- this is getting the SBeanFieldsMeta from the call
+        if (!sbeanFieldCache.containsKey(fileName)) {
+            logger.info(
+                "{} not present in cache for file : {} and active profiles : {}. Will do resource lookup.",
+            SBeanFieldMeta.class.getSimpleName(), fileName, activeProfiles);
+
+            sbeanFieldCache.put(fileName, reader.apply(fileName));
+
+            List<SBeanFieldMeta> sbeanFields = reader.apply(fileName);
+
+          
+
+            parsedFields.addAll(sbeanFields);
+            
+            List<SBeanMeta> SBeanMeta = SBeanMeta.parsedFields(sbeanFields);
+            
+            List<Object> parsedFields = new ArrayList<>();
+
+            parsedFields.addAll(SBeanMeta);
+
+            // this will store fields in list on object returning the object
+
+           // MetaDataObject metadata = new MetaDataObject(sbeanFields, SBeanMeta);
+
+            //sbeanFieldcache.put(fileName, metadataObject);
+        }
+        return sbeanFieldCache.get(fileName);
+    }
+
 
 
 
