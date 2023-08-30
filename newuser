@@ -3752,6 +3752,7 @@ public final class SBeanMetaUtil {
 }
 // this is the end of SBeanMetaUtil.java
 
+Replace search logic using t_search and t_searchcol. Instead of using DB tables use java objects (SBeanMeta and SBeanFieldMeta). Ensure these objects are in line with t_search and t_searchcol Enhance SBeanMetaUtil to not only parse and return field but to do SBeanMeta as well and store fields in list on object returning the object. APP code will need to adjust where it uses t_search and t_searchcol to swap to new flow.
 
 
 
