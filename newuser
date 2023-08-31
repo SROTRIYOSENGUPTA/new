@@ -3262,10 +3262,6 @@ public class SQLSearchStatement {
 
 
 
-// this is the end of the code
-
-////
-
 import static com.stonewain.common.constants.Constants.JSON_EXTENSION;
 
 import static com.stonewain.common.constants.Constants.PATH_SEPARATOR;
@@ -3301,6 +3297,9 @@ import com.scache.model.SBeanMeta;
 
 
 
+
+
+
 /**
  * @author Sukhpal Singh
  */
@@ -3311,6 +3310,8 @@ public final class SBeanMetaUtil {
     private final Function<String, List<SBeanFieldMeta>> reader;
     private final List<String> activeProfiles;
 
+    String fileName = "sample.json";
+
     public Map<String, List<SBeanFieldMeta>> sbeanFieldCache;
 
     public SBeanMetaUtil(ResourceLoader resourceLoader, Environment environment,
@@ -3318,6 +3319,11 @@ public final class SBeanMetaUtil {
         this.resourceLoader = resourceLoader;
         this.objectMapper = objectMapper;
         this.sbeanFieldCache = new HashMap<>();
+
+        SBeanMetaUtil metaUtil = new SBeanMetaUtil(resourceLoader, environment, objectMapper);
+        List<SBeanFieldMeta> metadataList = metaUtil.reader.apply(fileName);
+
+
         String[] profiles = environment.getActiveProfiles();
         if (profiles != null && profiles.length > 0) {
             activeProfiles = Arrays.asList(profiles);
@@ -3326,7 +3332,10 @@ public final class SBeanMetaUtil {
         } else {
             reader = (fileName) -> readMetaFields(fileName); // if profiles are not active
             activeProfiles = Collections.emptyList();
+
         }
+
+
     }
 
     public List<SBeanFieldMeta> getSBeanFieldsMeta(String fileName) {
@@ -3344,7 +3353,6 @@ public final class SBeanMetaUtil {
             parsedFieldsList.addAll(sbeanFields);
 
             List<SBeanMeta> SBeanMetaList = SBeanMeta.parsedFields(sbeanFields);
-
 
             parsedFieldsList.addAll(SBeanMetaList);
 
@@ -3454,28 +3462,6 @@ public final class SBeanMetaUtil {
 }
 
 // this is the end of SBeanMetaUtil.java
-
-
-////
-
-
- public SBeanMetaUtil(ResourceLoader resourceLoader, Environment environment,
-            ObjectMapper objectMapper) {
-        this.resourceLoader = resourceLoader;
-        this.objectMapper = objectMapper;
-        this.sbeanFieldCache = new HashMap<>();
-        String[] profiles = environment.getActiveProfiles();
-        if (profiles != null && profiles.length > 0) {
-            activeProfiles = Arrays.asList(profiles);
-            Collections.reverse(activeProfiles); // this will reverse the list
-            reader = (fileName) -> readMetaFieldsForProfiles(fileName); // active profiles json files
-        } else {
-            reader = (fileName) -> readMetaFields(fileName); // if profiles are not active
-            activeProfiles = Collections.emptyList();
-        }
-    }
-
-
 
 
 
