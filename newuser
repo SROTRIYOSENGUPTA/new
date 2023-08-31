@@ -3456,6 +3456,26 @@ public final class SBeanMetaUtil {
 // this is the end of SBeanMetaUtil.java
 
 
+////
+
+
+ public SBeanMetaUtil(ResourceLoader resourceLoader, Environment environment,
+            ObjectMapper objectMapper) {
+        this.resourceLoader = resourceLoader;
+        this.objectMapper = objectMapper;
+        this.sbeanFieldCache = new HashMap<>();
+        String[] profiles = environment.getActiveProfiles();
+        if (profiles != null && profiles.length > 0) {
+            activeProfiles = Arrays.asList(profiles);
+            Collections.reverse(activeProfiles); // this will reverse the list
+            reader = (fileName) -> readMetaFieldsForProfiles(fileName); // active profiles json files
+        } else {
+            reader = (fileName) -> readMetaFields(fileName); // if profiles are not active
+            activeProfiles = Collections.emptyList();
+        }
+    }
+
+
 
 
 
