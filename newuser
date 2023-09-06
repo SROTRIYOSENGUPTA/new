@@ -5323,6 +5323,105 @@ public class SQLSearchStatement {
 // this is the end of SQLSearchStatement.java
 
 
+////
+
+@SuppressWarnings("unused")
+public static Properties getnewSearchStatement(Connection conn, int searchId) throws Exception {
+    SBeanMetaUtil sbeanMetaUtil = new SBeanMetaUtil(resourceLoader, environment, objectMapper, searchId);
+    SBeanMeta sBeanMeta = sbeanMetaUtil.getSBeanMeta();
+
+    Properties props = new Properties();
+
+    if (sBeanMeta != null) {
+        String tables = sBeanMeta.getTables();
+        props.put(SQLSearchStatement.TABLES, tables);
+
+        String scondition = sBeanMeta.getscondition();
+        if (scondition != null && !scondition.isEmpty()) {
+            props.put(SQLSearchStatement.STANDARD_CONDITION, scondition);
+        }
+
+        String gcondition = sBeanMeta.getgcondition();
+        if (gcondition != null && !gcondition.isEmpty()) {
+            props.put(SQLSearchStatement.GROUP_BY_CONDITION, gcondition);
+        }
+
+        String hcondition = sBeanMeta.gethcondition();
+        if (hcondition != null && !hcondition.isEmpty()) {
+            props.put(SQLSearchStatement.HAVING_CONDITION, hcondition);
+        }
+
+        int rppage = sBeanMeta.getrppage();
+        if (rppage > 0) {
+            props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, rppage);
+        }
+
+        List<SBeanFieldMeta> t = sBeanMeta.getFields();
+        StringBuffer sb = new StringBuffer();
+
+        for (SBeanFieldMeta field : t) {
+            String fieldname = field.getFieldName();
+            String expression = field.getExpression();
+
+            if (sb.length() > 1) {
+                sb.append(", ");
+            }
+
+            sb.append(expression);
+
+            if (fieldname != null && expression.equalsIgnoreCase(fieldname)) {
+                sb.append(" as ");
+                sb.append(fieldname);
+            }
+        }
+
+        props.put(SQLSearchStatement.COLUMNS, sb.toString());
+    } else {
+        System.out.println("No data is available in object s of SBeanMeta");
+        String text = "Search id " + searchId + " is not set up in T_Search";
+        log.error("Error executing");
+        log.error(text);
+        throw new Exception(text);
+    }
+
+    return props;
+}
+
+/////
+
+public final class SBeanMetaUtil {
+    // ... (existing fields and methods)
+
+    private SBeanMeta sBeanMeta;
+
+    public SBeanMetaUtil(ResourceLoader resourceLoader, Environment environment, ObjectMapper objectMapper, int searchId) {
+        this.resourceLoader = resourceLoader;
+        this.objectMapper = objectMapper;
+        this.sbeanFieldCache = new HashMap<>();
+        this.searchId = searchId; // Store the searchId
+
+        // Load SBeanMeta for the given searchId during instantiation
+        this.sBeanMeta = loadSBeanMetaForSearchId(searchId);
+
+        String[] profiles = environment.getActiveProfiles();
+        // ... (rest of the constructor remains the same)
+    }
+
+    // ... (rest of the methods)
+
+    private SBeanMeta loadSBeanMetaForSearchId(int searchId) {
+        // Load SBeanMeta for the given searchId (similar to your previous implementation)
+        // You can implement the logic here to load SBeanMeta based on the searchId
+        // Return the loaded SBeanMeta object or null if not found
+    }
+
+    public SBeanMeta getSBeanMeta() {
+        return sBeanMeta;
+    }
+}
+
+
+
 
 
 
