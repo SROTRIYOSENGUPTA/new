@@ -5515,6 +5515,31 @@ public SBeanMetaUtil(ResourceLoader resourceLoader, Environment environment, Obj
         // You can implement the logic here to load SBeanMeta based on the searchId
         // Return the loaded SBeanMeta object or null if not found
     }
+///
+
+ public List<SBeanFieldMeta> getSBeanFieldsMeta(String fileName) {
+        if (!sbeanFieldCache.containsKey(fileName)) {
+            logger.info(
+                "{} not present in cache for file : {} and active profiles : {}. Will do resource lookup.",
+            SBeanFieldMeta.class.getSimpleName(), fileName, activeProfiles);
+
+            sbeanFieldCache.put(fileName, reader.apply(fileName));
+
+            List<SBeanFieldMeta> sbeanFields = reader.apply(fileName);
+
+            List<Object> parsedFieldsList = new ArrayList<>();
+
+            parsedFieldsList.addAll(sbeanFields);
+
+            List<SBeanMeta> SBeanMetaList = SBeanMeta.parsedFields(sbeanFields);
+
+            parsedFieldsList.addAll(SBeanMetaList);
+
+        }
+        return sbeanFieldCache.get(fileName);
+    }
+
+
 
 
 
