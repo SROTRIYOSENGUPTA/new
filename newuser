@@ -6440,6 +6440,66 @@ public static Properties getnewSearchStatement(Connection conn, int searchId, SB
     return props;
 }
 
+///
+
+public static Properties getnewSearchStatement(Connection conn, int searchId, SBeanMetaUtil sBeanMetaUtil) throws Exception {
+    Properties props = new Properties();
+
+    if (statementHash.get(searchId + "") != null) {
+        return ((Properties) statementHash.get(searchId + ""));
+    }
+
+    List<SBeanFieldMeta> fields = sBeanMetaUtil.getSBeanMeta("sample.json"); // Replace with the actual filename or logic to get the SBeanFieldMeta list
+
+    if (fields != null && !fields.isEmpty()) {
+        // Assuming you have some logic to extract necessary information from fields
+        String tables = "your_tables";
+        String scondition = "your_standard_condition";
+        String gcondition = "your_group_by_condition";
+        String hcondition = "your_having_condition";
+        int rppage = 10; // Example value
+
+        props.put(SQLSearchStatement.TABLES, tables);
+
+        if (scondition != null && !scondition.isEmpty()) {
+            props.put(SQLSearchStatement.STANDARD_CONDITION, scondition);
+        }
+
+        if (gcondition != null && !gcondition.isEmpty()) {
+            props.put(SQLSearchStatement.GROUP_BY_CONDITION, gcondition);
+        }
+
+        if (hcondition != null && !hcondition.isEmpty()) {
+            props.put(SQLSearchStatement.HAVING_CONDITION, hcondition);
+        }
+
+        if (rppage > 0) {
+            props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, String.valueOf(rppage));
+        }
+
+        // Access resourceLoader, environment, and objectMapper from SBeanMetaUtil
+        ResourceLoader resourceLoader = sBeanMetaUtil.getResourceLoader();
+        Environment environment = sBeanMetaUtil.getEnvironment();
+        ObjectMapper objectMapper = sBeanMetaUtil.getObjectMapper();
+
+        // Now you can use resourceLoader, environment, and objectMapper as needed
+        // For example, resourceLoader.loadResource("resourceName");
+    } else {
+        System.out.println("No data is available in the fields list.");
+        String text = "Search id " + searchId + " is not set up properly.";
+        log.error("Error executing");
+        log.error(text);
+        throw new Exception(text);
+    }
+
+    // Assuming you have some logic to generate the COLUMNS property based on fields
+
+    statementHash.put(searchId + "", props);
+
+    return props;
+}
+
+
 
 
 
