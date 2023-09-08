@@ -6343,6 +6343,20 @@ public SBeanMeta getSBeanMetaWithPrefix(String filePrefix) {
 
 // the new getnewsearchstatement method of SQLSearchStatement as well should instantiate with SBeanMetaUtil with the parameters ResourceLoader, Environment and objectMapper
 
+//
+
+public static Properties getnewsearchstatement(
+    Connection conn, int searchId,
+    ResourceLoader resourceLoader, Environment environment, ObjectMapper objectMapper) throws Exception {
+    // Now you can use resourceLoader, environment, and objectMapper here if needed
+
+    // Use SBeanMetaUtil to get the search statement properties
+    Properties props = SBeanMetaUtil.getNewSearchStatement(conn, searchId, resourceLoader, environment, objectMapper);
+
+    // Handle any additional logic or modifications to the properties here if needed
+
+    return props;
+}
 
 
 
