@@ -6339,6 +6339,9 @@ public SBeanMeta getSBeanMetaWithPrefix(String filePrefix) {
     return combinedSBeanMeta;
 }
 
+///
+
+// the new getnewsearchstatement method of SQLSearchStatement as well should instantiate with SBeanMetaUtil with the parameters ResourceLoader, Environment and objectMapper
 
 
 
