@@ -6358,6 +6358,89 @@ public static Properties getnewsearchstatement(
     return props;
 }
 
+///
+
+public static Properties getnewSearchStatement(Connection conn, int searchId, SBeanMetaUtil sBeanMetaUtil) throws Exception {
+    Properties props = new Properties();
+
+    if (statementHash.get(searchId + "") != null) {
+        return ((Properties) statementHash.get(searchId + ""));
+    }
+
+    SBeanMeta s = sBeanMetaUtil.getSBeanMeta("sample.json"); // Replace with the actual filename or logic to get the SBeanMeta
+
+    if (s != null) {
+        int sid = s.getsid();
+
+        if (statementHash.get(sid + "") != null) {
+            return ((Properties) statementHash.get(sid + ""));
+        }
+
+        String tables = s.gettables();
+        props.put(SQLSearchStatement.TABLES, tables);
+
+        String scondition = s.getscondition();
+        if (scondition != null && !scondition.isEmpty()) {
+            props.put(SQLSearchStatement.STANDARD_CONDITION, scondition);
+        }
+
+        String gcondition = s.getgcondition();
+        if (gcondition != null && !gcondition.isEmpty()) {
+            props.put(SQLSearchStatement.GROUP_BY_CONDITION, gcondition);
+        }
+
+        String hcondition = s.gethcondition();
+        if (hcondition != null && !hcondition.isEmpty()) {
+            props.put(SQLSearchStatement.HAVING_CONDITION, hcondition);
+        }
+
+        int rppage = s.getrppage();
+        if (rppage > 0) {
+            props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, rppage);
+        }
+
+        // Access resourceLoader, environment, and objectMapper from SBeanMetaUtil
+        ResourceLoader resourceLoader = sBeanMetaUtil.getResourceLoader();
+        Environment environment = sBeanMetaUtil.getEnvironment();
+        ObjectMapper objectMapper = sBeanMetaUtil.getObjectMapper();
+
+        // Now you can use resourceLoader, environment, and objectMapper as needed
+        // For example, resourceLoader.loadResource("resourceName");
+
+    } else {
+        System.out.println("No data is available in object s of SBeanMeta");
+        String text = "Search id " + searchId + " is not set up in T_Search";
+        log.error("Error executing");
+        log.error(text);
+        throw new Exception(text);
+    }
+
+    List<SBeanFieldMeta> t = s.getFields();
+    StringBuffer sb = new StringBuffer();
+
+    for (SBeanFieldMeta field : t) {
+        String fieldname = field.getFieldName();
+        String expression = field.getExpression();
+
+        if (sb.length() > 1) {
+            sb.append(", ");
+        }
+
+        sb.append(expression);
+
+        if (fieldname != null && expression.equalsIgnoreCase(fieldname)) {
+            sb.append(" as ");
+            sb.append(fieldname);
+        }
+    }
+
+    props.put(SQLSearchStatement.COLUMNS, sb.toString());
+    statementHash.put(searchId + "", props);
+
+    return props;
+}
+
+
 
 
 
