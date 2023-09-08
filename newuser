@@ -6236,6 +6236,92 @@ public class SQLSearchStatement {
 
 // this is the end of SQLSearchStatement.java
 
+/////
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+
+public final class SBeanMetaUtil {
+    private static final Logger logger = LoggerFactory.getLogger(SBeanMetaUtil.class);
+    private final ResourceLoader resourceLoader;
+    private final ObjectMapper objectMapper;
+    private final Function<String, List<SBeanFieldMeta>> reader;
+    private final List<String> activeProfiles;
+    private int searchId;
+    public Map<String, List<SBeanFieldMeta>> sbeanFieldCache;
+
+    public SBeanMetaUtil(ResourceLoader resourceLoader, Environment environment, ObjectMapper objectMapper) {
+        this.resourceLoader = resourceLoader;
+        this.objectMapper = objectMapper;
+        this.sbeanFieldCache = new HashMap<>();
+
+        String[] profiles = environment.getActiveProfiles();
+
+        if (profiles != null && profiles.length > 0) {
+            activeProfiles = Arrays.asList(profiles);
+            Collections.reverse(activeProfiles); // this will reverse the list
+            reader = (fileName) -> readMetaFieldsForProfiles(fileName); // active profiles json files
+        } else {
+            reader = (fileName) -> readMetaFields(fileName); // if profiles are not active
+            activeProfiles = Collections.emptyList(); // here we are using the filename as the search id control to look for and parse for the files
+        }
+    }
+
+    // Existing methods...
+
+    // New method to retrieve SBeanMeta with both SBeanMeta and SBeanFieldMeta
+    public SBeanMeta getSBeanMetaWithFields(String fileName) {
+        if (!sbeanFieldCache.containsKey(fileName)) {
+            logger.info(
+                    "{} not present in cache for file : {} and active profiles : {}. Will do resource lookup.",
+                    SBeanMeta.class.getSimpleName(), fileName, activeProfiles);
+
+            sbeanFieldCache.put(fileName, reader.apply(fileName));
+
+            List<SBeanFieldMeta> sbeanFields = reader.apply(fileName);
+
+            List<Object> parsedFieldsList = new ArrayList<>();
+
+            parsedFieldsList.addAll(sbeanFields);
+
+            List<SBeanMeta> SBeanMetaList = SBeanMeta.parsedFields(sbeanFields);
+
+            parsedFieldsList.addAll(SBeanMetaList);
+
+            // Create an SBeanMeta object containing both SBeanMeta and SBeanFieldMeta
+            SBeanMeta combinedSBeanMeta = new SBeanMeta();
+            combinedSBeanMeta.setFields(parsedFieldsList);
+
+            return combinedSBeanMeta;
+        }
+        return sbeanFieldCache.get(fileName);
+    }
+
+    public static String generateColumns(List<SBeanFieldMeta> fields) {
+        // Existing generateColumns method...
+    }
+
+    public static String generateFilterConditions(List<SBeanFieldMeta> fields) {
+        // Existing generateFilterConditions method...
+    }
+
+    public SBeanMeta getSBeanMeta() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+}
+
+
 
 
 
