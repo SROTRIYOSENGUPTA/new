@@ -6321,6 +6321,24 @@ public final class SBeanMetaUtil {
     }
 }
 
+////
+
+public SBeanMeta getSBeanMetaWithPrefix(String filePrefix) {
+    List<SBeanFieldMeta> combinedFields = new ArrayList<>();
+
+    for (String fileName : sbeanFieldCache.keySet()) {
+        if (fileName.startsWith(filePrefix)) {
+            List<SBeanFieldMeta> sbeanFields = sbeanFieldCache.get(fileName);
+            combinedFields.addAll(sbeanFields);
+        }
+    }
+
+    SBeanMeta combinedSBeanMeta = new SBeanMeta();
+    combinedSBeanMeta.setFields(combinedFields);
+
+    return combinedSBeanMeta;
+}
+
 
 
 
