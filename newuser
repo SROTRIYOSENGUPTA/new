@@ -240,3 +240,37 @@ import com.scache.model.SBeanMeta;
 }
 
 // this is the end of SBeanMetaUtil.java
+
+// prefix functionality
+
+public SBeanMeta findAndGroupFilesWithSamePrefix(String prefix) {
+    List<SBeanFieldMeta> combinedFields = new ArrayList<>();
+
+    List<String> matchingFileNames = new ArrayList<>();
+
+    for (String fileName : sbeanFieldCache.keySet()) {
+        if (fileName.startsWith(prefix)) {
+            matchingFileNames.add(fileName);
+        }
+    }
+
+    // Sort file names based on numeric values
+    matchingFileNames.sort(Comparator.comparingInt(this::extractNumericValue));
+
+    for (String fileName : matchingFileNames) {
+        List<SBeanFieldMeta> sbeanFields = sbeanFieldCache.get(fileName);
+        combinedFields.addAll(sbeanFields);
+    }
+
+    SBeanMeta combinedSBeanMeta = new SBeanMeta();
+    combinedSBeanMeta.setFields(combinedFields);
+
+    return combinedSBeanMeta;
+}
+
+// Helper method to extract the numeric value from a file name
+private int extractNumericValue(String fileName) {
+    String numericPart = fileName.replaceAll("[^0-9]", "");
+    return Integer.parseInt(numericPart);
+}
+
