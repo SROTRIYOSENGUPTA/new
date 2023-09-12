@@ -22,3 +22,62 @@ public static void main(String[] args) {
         e.printStackTrace();
     }
 }
+
+public static String main(String[] args) {
+    // Existing code in your main method
+
+    // Capture the search result as a string
+    String searchResult = /* Logic to generate the search result as a string */;
+
+    return searchResult;
+}
+
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+
+public class SQLSearchStatementTest {
+
+    @Test
+    public void testMainMethodSearchResult() {
+        // Call the main method and capture the search result
+        String capturedResult = SQLSearchStatement.main(/*pass any arguments if needed*/);
+
+        // Define your expected search result as a string
+        String expectedSearchResult = "Expected search result goes here...";
+
+        // Assert that the captured result matches the expected result
+        assertEquals(expectedSearchResult, capturedResult);
+    }
+}
+
+import org.junit.Before;
+import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+
+public class SQLSearchStatementTest {
+    private OutputCapturer outputCapturer;
+
+    @Before
+    public void setUp() {
+        outputCapturer = new OutputCapturer();
+    }
+
+    @Test
+    public void testMainMethodOutput() {
+        outputCapturer.startCapture();
+
+        // Call the main method to execute your code
+        SQLSearchStatement.main(/*pass any arguments if needed*/);
+
+        String capturedOutput = outputCapturer.getCapturedOutput();
+        outputCapturer.stopCapture();
+
+        // Define your expected output
+        String expectedOutput = "Expected output goes here...";
+
+        // Assert that the captured output matches the expected output
+        assertEquals(expectedOutput, capturedOutput);
+    }
+}
+
