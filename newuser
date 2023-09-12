@@ -1,11 +1,3 @@
-
-/**
- * Copyright Stonewain Systems Inc.
-
- */
-// this is the beginning of SBeanMetaUtil.java
-package com.stonewain.spring.util;
-
 import static com.stonewain.common.constants.Constants.JSON_EXTENSION;
 import static com.stonewain.common.constants.Constants.PATH_SEPARATOR;
 import static com.stonewain.common.constants.Constants.SBEAN_META_DIR;
@@ -55,7 +47,6 @@ import com.scache.model.SBeanMeta;
 
     public SBeanMetaUtil(ResourceLoader resourceLoader, Environment environment, ObjectMapper objectMapper) {
         this.resourceLoader = resourceLoader;
-
         this.objectMapper = objectMapper;
         this.sbeanFieldCache = new HashMap<>();
         String[] profiles = environment.getActiveProfiles();
@@ -79,12 +70,7 @@ import com.scache.model.SBeanMeta;
         return objectMapper;
     }
 
-    // parse the data through SBeanMeta, parsing logic SBeanMeta associated with filename
-
-    // prefix with method looking up filename and return SBeanMeta which consist of a list of both SBeanMeta as well as SBeanFieldMeta
-
-    // the new getnewsearchstatement method of SQLSearchStatement as well should instantiate with SBeanMetaUtil with the parameters ResourceLoader, Environment and objectMapper
-
+    // utilize java object SBeanMeta
 
 
     public List<SBeanFieldMeta> getSBeanFieldsMeta(String fileName) {
@@ -133,6 +119,39 @@ import com.scache.model.SBeanMeta;
 
         }
         return sbeanFieldCache.get(fileName);
+    }
+
+    public SBeanMeta groupwithprefix(String prefix) {
+        List<SBeanFieldMeta> combinedFields = new ArrayList<>();
+
+        List<String> matchingFileNames = new ArrayList<>();
+
+        for (String fileName : sbeanFieldCache.keySet()) {
+
+            if (fileName.startsWith(prefix)) {
+                matchingFileNames.add(fileName);
+            }
+        }
+
+        // Sorting file names here based on numeric values
+        matchingFileNames.sort(Comparator.comparingInt(this::extractNumericValue));
+
+        for (String fileName : matchingFileNames) {
+            List<SBeanFieldMeta> sbeanFields = sbeanFieldCache.get(fileName);
+            combinedFields.addAll(sbeanFields);
+        }
+
+        SBeanMeta combinedSBeanMeta = new SBeanMeta();
+        combinedSBeanMeta.setFields(combinedFields);
+
+        return combinedSBeanMeta; // this will return a list of SBeanMeta which consists of both SBeanMeta and SBeanFieldMeta
+    }
+
+    // Helper method to extract the numeric value from a file name
+
+    private int extractNumericValue(String fileName) {
+        String numericPart = fileName.replaceAll("[^0-9]", "");
+        return Integer.parseInt(numericPart);
     }
 
     private List<SBeanFieldMeta> readMetaFields(String fileName) {
@@ -196,7 +215,7 @@ import com.scache.model.SBeanMeta;
 
 ////
 
-    public static String generateColumns(List<SBeanFieldMeta> fields) {
+   /* public static String generateColumns(List<SBeanFieldMeta> fields) {
 
         StringBuilder sb = new StringBuilder();
 
@@ -230,7 +249,7 @@ import com.scache.model.SBeanMeta;
         }
         return sb.toString();
 
-    }
+    } */
 
     public SBeanMeta getSBeanMeta() {
         // TODO Auto-generated method stub
@@ -240,37 +259,3 @@ import com.scache.model.SBeanMeta;
 }
 
 // this is the end of SBeanMetaUtil.java
-
-// prefix functionality
-
-public SBeanMeta findAndGroupFilesWithSamePrefix(String prefix) {
-    List<SBeanFieldMeta> combinedFields = new ArrayList<>();
-
-    List<String> matchingFileNames = new ArrayList<>();
-
-    for (String fileName : sbeanFieldCache.keySet()) {
-        if (fileName.startsWith(prefix)) {
-            matchingFileNames.add(fileName);
-        }
-    }
-
-    // Sort file names based on numeric values
-    matchingFileNames.sort(Comparator.comparingInt(this::extractNumericValue));
-
-    for (String fileName : matchingFileNames) {
-        List<SBeanFieldMeta> sbeanFields = sbeanFieldCache.get(fileName);
-        combinedFields.addAll(sbeanFields);
-    }
-
-    SBeanMeta combinedSBeanMeta = new SBeanMeta();
-    combinedSBeanMeta.setFields(combinedFields);
-
-    return combinedSBeanMeta;
-}
-
-// Helper method to extract the numeric value from a file name
-private int extractNumericValue(String fileName) {
-    String numericPart = fileName.replaceAll("[^0-9]", "");
-    return Integer.parseInt(numericPart);
-}
-
