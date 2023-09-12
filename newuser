@@ -1,57 +1,17 @@
-  public static Properties getnewSearchStatement(Connection conn, int searchId, SBeanMetaUtil sBeanMetaUtil) throws Exception {
-        Properties props = new Properties();
+import java.util.Properties;
 
-        if (statementHash.get(searchId + "") != null) {
+public class Main {
 
-            return ((Properties) statementHash.get(searchId + ""));
+    public static void main(String[] args) {
+        int searchId = 123; // Replace with your desired search ID
+
+        try {
+            Properties result = SQLSearchStatement.getnewSearchStatement(null, searchId, new SBeanMetaUtil());
+
+            // Print the result (for testing purposes)
+            System.out.println("Result: " + result);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        List<SBeanFieldMeta> fields = sBeanMetaUtil.getSBeanMeta("sample.json");
-
-        if (fields != null && !fields.isEmpty()) {
-
-            String tables = "";
-            String scondition = "";
-            String gcondition = "";
-            String hcondition = "";
-            int rppage = 0;
-
-            props.put(SQLSearchStatement.TABLES, tables);
-
-            if (scondition != null && !scondition.isEmpty()) {
-                props.put(SQLSearchStatement.STANDARD_CONDITION, scondition);
-            }
-
-            if (gcondition != null && !gcondition.isEmpty()) {
-                props.put(SQLSearchStatement.GROUP_BY_CONDITION, gcondition);
-            }
-
-            if (hcondition != null && !hcondition.isEmpty()) {
-                props.put(SQLSearchStatement.HAVING_CONDITION, hcondition);
-            }
-
-            if (rppage > 0) {
-                props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, String.valueOf(rppage));
-            }
-
-
-            // ResourceLoader resourceLoader = sBeanMetaUtil.getResourceLoader();
-           //  Environment environment = sBeanMetaUtil.getEnvironment();
-           // ObjectMapper objectMapper = sBeanMetaUtil.getObjectMapper();
-
-
-        } else {
-            System.out.println("No data is available in the fields list.");
-            String text = "Search id " + searchId + " is not set up properly.";
-            log.error("Error executing");
-            log.error(text);
-            throw new Exception(text);
-        }
-
-        // Assuming you have some logic to generate the COLUMNS property based on fields
-
-        statementHash.put(searchId + "", props);
-
-        return props;
     }
-    
+}
