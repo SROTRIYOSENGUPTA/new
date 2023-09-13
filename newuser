@@ -1,47 +1,62 @@
-public static Properties getnewSearchStatement(int searchId, SBeanMeta sBeanMeta) throws Exception {
-    Properties props = new Properties();
-
-    SBeanMetaUtil sBeanMetaUtil = new SBeanMetaUtil();  // Initializing sBeanMetaUtil
-
-    if (statementHash.get(searchId + "") != null) {
-        return ((Properties) statementHash.get(searchId + ""));
-    }
-
-    List<SBeanFieldMeta> fields = sBeanMetaUtil.getSBeanMeta("sample.json");
-
-    if (fields == null || fields.isEmpty()) {  // Checking if fields is null or empty
-        System.out.println("No data is available in the fields list.");
-        String text = "Search id " + searchId + " is not set up properly.";
-        log.error("Error executing");
-        log.error(text);
-        throw new Exception(text);
-    }
-
-    // ... (rest of your method code)
-
-    return props; // Ensure this is not returning a null object
-}
-
-public static void main(String[] args) {
-    try {
-        SBeanMeta sBeanMeta = new SBeanMeta(); // assuming a default constructor exists
-
-        Properties props = getnewSearchStatement(1, sBeanMeta);
-
-        if (props != null) {
-            // Iterate through and print out each property
-            for (String name : props.stringPropertyNames()) {
-                String value = props.getProperty(name);
-                if (value != null) {  // Checking if value is not null before printing
-                    System.out.println(name + ": " + value);
-                } else {
-                    System.out.println(name + " is null");
-                }
-            }
-        } else {
-            System.out.println("Properties object is null.");
+ public static Properties getnewSearchStatement(int searchId, SBeanMeta sBeanMeta) throws Exception {
+        Properties props = new Properties();
+        
+        if (statementHash.get(searchId + "") != null) {
+            return ((Properties) statementHash.get(searchId + ""));
         }
-    } catch (Exception e) {
-        e.printStackTrace();
+
+        List<SBeanFieldMeta> fields = sBeanMetaUtil.getSBeanMeta("sample.json");
+        
+        SBeanMeta
+
+        if (fields != null && !fields.isEmpty()) {
+
+            String tables = "";
+            String scondition = "";
+            String gcondition = "";
+            String hcondition = "";
+            int rppage = 0;
+
+            props.put(SQLSearchStatement.TABLES, tables);
+
+            if (scondition != null && !scondition.isEmpty()) {
+                props.put(SQLSearchStatement.STANDARD_CONDITION, scondition);
+            }
+
+            if (gcondition != null && !gcondition.isEmpty()) {
+                props.put(SQLSearchStatement.GROUP_BY_CONDITION, gcondition);
+            }
+
+            if (hcondition != null && !hcondition.isEmpty()) {
+                props.put(SQLSearchStatement.HAVING_CONDITION, hcondition);
+            }
+
+            if (rppage > 0) {
+                props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, String.valueOf(rppage));
+            }
+
+        } else {
+            System.out.println("No data is available in the fields list.");
+            String text = "Search id " + searchId + " is not set up properly.";
+            log.error("Error executing");
+            log.error(text);
+            throw new Exception(text);
+        }
+        if (fields != null && !fields.isEmpty()) {
+
+            sBeanMeta.tables();
+            sBeanMeta.scondition();
+            sBeanMeta.gcondition();
+            // sBeanMeta.hcondition();
+
+            statementHash.put(searchId + "", props);
+        } else {
+            System.out.println("No data is available in the fields list.");
+            String text = "Search id " + searchId + " is not set up properly.";
+            log.error("Error executing");
+            log.error(text);
+            throw new Exception(text);
+        }
+        return props;
+
     }
-}
