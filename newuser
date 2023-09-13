@@ -39,3 +39,31 @@ public class YourClassName {
 
     // Include the classes SBeanMetaUtil, SBeanMeta, etc., here or in separate files.
 }
+
+
+////
+
+public static void main(String[] args) {
+    try {
+        // Create instances of required objects (Connection, SBeanMetaUtil, and SBeanMeta)
+        Connection conn = null; // you will need to initialize this with a real connection
+        SBeanMetaUtil sBeanMetaUtil = new SBeanMetaUtil(); // assuming a default constructor exists
+        SBeanMeta sBeanMeta = new SBeanMeta(); // assuming a default constructor exists
+
+        Properties props = getnewSearchStatement(conn, 1, sBeanMetaUtil, sBeanMeta);
+
+        // Null check before using props
+        if (props != null) {
+            // Iterate through and print out each property
+            for (String name : props.stringPropertyNames()) {
+                String value = props.getProperty(name);
+                System.out.println(name + ": " + value);
+            }
+        } else {
+            System.out.println("Properties object is null.");
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+
