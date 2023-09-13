@@ -1,12 +1,51 @@
 import java.util.Properties;
 
-public class Main {
+public class SQLSearchStatement {
+
+    // Your existing methods and class members here...
+
+    public static Properties getnewSearchStatement(Connection conn, int searchId, SBeanMeta sBeanMeta) throws Exception {
+        Properties props = new Properties();
+
+        if (statementHash.get(searchId + "") != null) {
+            return ((Properties) statementHash.get(searchId + ""));
+        }
+
+        List<SBeanFieldMeta> fields = sBeanMetaUtil.getSBeanMeta("sample.json");
+
+        if (fields != null && !fields.isEmpty()) {
+            // Extract relevant data from SBeanListMeta and populate SBeanMeta
+            sBeanMeta.setTables(/* Extract tables from SBeanListMeta */);
+            sBeanMeta.setStandardCondition(/* Extract standardCondition from SBeanListMeta */);
+            sBeanMeta.setGroupByCondition(/* Extract groupByCondition from SBeanListMeta */);
+            sBeanMeta.setHavingCondition(/* Extract havingCondition from SBeanListMeta */);
+            sBeanMeta.setDefaultRecordCount(/* Extract defaultRecordCount from SBeanListMeta */);
+
+            // Assuming you have some logic to generate the COLUMNS property based on fields
+            // props.put(SQLSearchStatement.COLUMNS, columnStr);
+
+            statementHash.put(searchId + "", props);
+        } else {
+            System.out.println("No data is available in the fields list.");
+            String text = "Search id " + searchId + " is not set up properly.";
+            log.error("Error executing");
+            log.error(text);
+            throw new Exception(text);
+        }
+
+        return props;
+    }
 
     public static void main(String[] args) {
-        int searchId = 123; // Replace with your desired search ID
+        // Create an instance of SBeanMeta
+        SBeanMeta sBeanMeta = new SBeanMeta();
+
+        // Replace with your desired search ID
+        int searchId = 123;
 
         try {
-            Properties result = SQLSearchStatement.getnewSearchStatement(null, searchId, new SBeanMetaUtil());
+            // Call the getnewSearchStatement method and populate the SBeanMeta object
+            Properties result = getnewSearchStatement(null, searchId, sBeanMeta);
 
             // Print the result (for testing purposes)
             System.out.println("Result: " + result);
