@@ -1,66 +1,63 @@
-public static Properties getnewSearchStatement(Connection conn, int searchId, SBeanMetaUtil sBeanMetaUtil, SBeanMeta sBeanMeta)
-  throws Exception {
+import java.sql.Connection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+public class YourClass {
+    private static Map<String, Properties> statementHash = new HashMap<>();
+
+    public static Properties getnewSearchStatement(Connection conn, int searchId, SBeanMetaUtil sBeanMetaUtil, List<SBeanListMeta> sBeanListMetaList)
+            throws Exception {
         Properties props = new Properties();
 
-        if (statementHash.get(searchId + "") != null) {
-            return ((Properties) statementHash.get(searchId + ""));
+        if (statementHash.containsKey(String.valueOf(searchId))) {
+            return statementHash.get(String.valueOf(searchId));
         }
 
-        List<SBeanFieldMeta> fields = sBeanMetaUtil.getSBeanMeta("sample.json");
-
-        if (fields != null && !fields.isEmpty()) {
-
-            String tables = "";
-            String scondition = "";
-            String gcondition = "";
-            String hcondition = "";
-            int rppage = 0;
-
-            props.put(SQLSearchStatement.TABLES, tables);
-
-            if (scondition != null && !scondition.isEmpty()) {
-                props.put(SQLSearchStatement.STANDARD_CONDITION, scondition);
-            }
-
-            if (gcondition != null && !gcondition.isEmpty()) {
-                props.put(SQLSearchStatement.GROUP_BY_CONDITION, gcondition);
-            }
-
-            if (hcondition != null && !hcondition.isEmpty()) {
-                props.put(SQLSearchStatement.HAVING_CONDITION, hcondition);
-            }
-
-            if (rppage > 0) {
-                props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, String.valueOf(rppage));
-            }
-
-        } else {
-            System.out.println("No data is available in the fields list.");
+        if (sBeanListMetaList == null || sBeanListMetaList.isEmpty()) {
+            System.out.println("No data is available in the sBeanListMetaList.");
             String text = "Search id " + searchId + " is not set up properly.";
-            log.error("Error executing");
-            log.error(text);
             throw new Exception(text);
         }
 
-        if (fields != null && !fields.isEmpty()) {
+        // Create an empty SBeanMeta object
+        SBeanMeta sBeanMeta = new SBeanMeta();
 
-            sBeanMeta.tables();
-            sBeanMeta.scondition();
-            sBeanMeta.gcondition();
-            // sBeanMeta.hcondition();
-
-            statementHash.put(searchId + "", props);
-        } else {
-            System.out.println("No data is available in the fields list.");
-            String text = "Search id " + searchId + " is not set up properly.";
-            log.error("Error executing");
-            log.error(text);
-            throw new Exception(text);
+        for (SBeanListMeta sBeanListMeta : sBeanListMetaList) {
+            // Populate sBeanMeta with data from sBeanListMeta
+            sBeanMeta.setTables(sBeanListMeta.getTables());
+            sBeanMeta.setScondition(sBeanListMeta.getScondition());
+            sBeanMeta.setGcondition(sBeanListMeta.getGcondition());
+            sBeanMeta.setHcondition(sBeanListMeta.getHcondition());
+            // Update rppage in sBeanMeta if necessary.
         }
+
+        // Now sBeanMeta is populated with data from sBeanListMetaList
+
+        props.put(SQLSearchStatement.TABLES, sBeanMeta.tables());
+
+        if (sBeanMeta.scondition() != null && !sBeanMeta.scondition().isEmpty()) {
+            props.put(SQLSearchStatement.STANDARD_CONDITION, sBeanMeta.scondition());
+        }
+
+        if (sBeanMeta.gcondition() != null && !sBeanMeta.gcondition().isEmpty()) {
+            props.put(SQLSearchStatement.GROUP_BY_CONDITION, sBeanMeta.gcondition());
+        }
+
+        if (sBeanMeta.hcondition() != null && !sBeanMeta.hcondition().isEmpty()) {
+            props.put(SQLSearchStatement.HAVING_CONDITION, sBeanMeta.hcondition());
+        }
+
+        if (sBeanMeta.rppage() > 0) {
+            props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, String.valueOf(sBeanMeta.rppage()));
+        }
+
+        statementHash.put(String.valueOf(searchId), props);
 
         return props;
     }
-    
+
     public static void main(String[] args) {
         SBeanMeta sBeanMeta = new SBeanMeta();
         Connection conn = null;
@@ -70,9 +67,13 @@ public static Properties getnewSearchStatement(Connection conn, int searchId, SB
             // Initialize sBeanMetaUtil with valid arguments or adjust as needed
             SBeanMetaUtil sBeanMetaUtil = new SBeanMetaUtil(/* provide valid arguments */);
 
-            Properties result = getnewSearchStatement(conn, searchId, sBeanMetaUtil, sBeanMeta);
+            // Replace this with your actual list of SBeanListMeta objects.
+            List<SBeanListMeta> sBeanListMetaList = /* initialize your list here */;
+
+            Properties result = getnewSearchStatement(conn, searchId, sBeanMetaUtil, sBeanListMetaList);
             System.out.println("Result: " + result);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+}
