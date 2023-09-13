@@ -600,5 +600,12 @@ public static void main(String[] args) {
     }
 }
 
+ResourceLoader resourceLoader = new YourResourceLoader(); // Replace with your actual ResourceLoader implementation
+Environment environment = new YourEnvironment(); // Replace with your actual Environment implementation
+ObjectMapper objectMapper = new YourObjectMapper(); // Replace with your actual ObjectMapper implementation
+
+SBeanMetaUtil sBeanMetaUtil = new SBeanMetaUtil(resourceLoader, environment, objectMapper);
+
+
 
 
