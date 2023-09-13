@@ -584,4 +584,21 @@ Exception in thread "main" java.lang.NullPointerException
 	at com.stonewain.spring.util.SBeanMetaUtil.<init>(SBeanMetaUtil.java:59)
 	at com.oceanview.sql.SQLSearchStatement.main(SQLSearchStatement.java:402)
 
+public static void main(String[] args) {
+    SBeanMeta sBeanMeta = new SBeanMeta();
+    Connection conn = null;
+    int searchId = 123;
+
+    try {
+        // Initialize sBeanMetaUtil with valid arguments or adjust as needed
+        SBeanMetaUtil sBeanMetaUtil = new SBeanMetaUtil(/* provide valid arguments */);
+
+        Properties result = getnewSearchStatement(conn, searchId, sBeanMetaUtil, sBeanMeta);
+        System.out.println("Result: " + result);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+
+
 
