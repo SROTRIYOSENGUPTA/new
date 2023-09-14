@@ -160,19 +160,39 @@ class SBeanMeta {
 
 // You should also define the SBeanFieldMeta class as per your requirements.
 
+////
+
+
+public static Properties getNewSearchStatement(int searchId, SBeanMeta sBeanMeta) throws Exception {
+    Properties props = new Properties();
+
+    if (statementHash.get(String.valueOf(searchId)) != null) {
+        return statementHash.get(String.valueOf(searchId));
+    }
+
+    // Populating SBeanMeta object with random values
+    sBeanMeta.tables = "table" + new Random().nextInt(100);
+    sBeanMeta.scondition = "condition" + new Random().nextInt(100);
+    sBeanMeta.gcondition = "group" + new Random().nextInt(100);
+    sBeanMeta.hcondition = "having" + new Random().nextInt(100);
+
+    // Adding values directly from SBeanMeta object to props
+    props.put("TABLES", sBeanMeta.tables);
+    props.put("STANDARD_CONDITION", sBeanMeta.scondition);
+    props.put("GROUP_BY_CONDITION", sBeanMeta.gcondition);
+    props.put("HAVING_CONDITION", sBeanMeta.hcondition);
+
+    // Adding the created props to statementHash for possible retrieval in subsequent calls
+    statementHash.put(String.valueOf(searchId), props);
+
+    return props;
+}
+
+///
 
 public static void main(String[] args) {
     try {
-        SBeanMeta sBeanMeta = new SBeanMeta(); // Assuming a default constructor exists
-        sBeanMeta.tables = "sample_table";
-        sBeanMeta.scondition = "sample_standard_condition";
-        sBeanMeta.gcondition = "sample_group_by_condition";
-        sBeanMeta.hcondition = "sample_having_condition";
-        
-        // Initialize fields with sample values
-        sBeanMeta.fields = new ArrayList<>();
-        sBeanMeta.fields.add(new SBeanFieldMeta("field1", "type1"));
-        sBeanMeta.fields.add(new SBeanFieldMeta("field2", "type2"));
+        SBeanMeta sBeanMeta = new SBeanMeta();
 
         Properties props = getNewSearchStatement(1, sBeanMeta);
 
@@ -182,13 +202,14 @@ public static void main(String[] args) {
         System.out.println("GROUP_BY_CONDITION: " + sBeanMeta.gcondition);
         System.out.println("HAVING_CONDITION: " + sBeanMeta.hcondition);
 
+        // Printing the properties
+        for (String name : props.stringPropertyNames()) {
+            String value = props.getProperty(name);
+            System.out.println(name + ": " + value);
+        }
+
     } catch (Exception e) {
         e.printStackTrace();
     }
 }
-
-No data is available in the fields list.
-java.lang.Exception: Search id 1 is not set up properly.
-	at com.oceanview.sql.SQLSearchStatement.getNewSearchStatement(SQLSearchStatement.java:540)
-	at com.oceanview.sql.SQLSearchStatement.main(SQLSearchStatement.java:555)
 
