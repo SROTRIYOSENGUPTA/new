@@ -81,3 +81,81 @@
             e.printStackTrace();
         }
     }
+
+
+//
+
+import java.util.*;
+
+public class YourClass {
+
+    private static Map<String, Properties> statementHash = new HashMap<>();
+
+    public static Properties getNewSearchStatement(int searchId, SBeanMeta sBeanMeta) throws Exception {
+        Properties props = new Properties();
+
+        if (statementHash.get(String.valueOf(searchId)) != null) {
+            return statementHash.get(String.valueOf(searchId));
+        }
+
+        List<SBeanFieldMeta> fields = sBeanMeta.fields; // Assuming fields is a public member 
+
+        if (fields != null && !fields.isEmpty()) {
+            String tables = sBeanMeta.tables;
+            String scondition = sBeanMeta.scondition;
+            String gcondition = sBeanMeta.gcondition;
+            String hcondition = sBeanMeta.hcondition;
+            int rppage = 0;
+
+            props.put("TABLES", tables);
+            props.put("STANDARD_CONDITION", scondition);
+            props.put("GROUP_BY_CONDITION", gcondition);
+            props.put("HAVING_CONDITION", hcondition);
+
+            if (rppage > 0) {
+                props.put("DEFAULT_RECORD_COUNT", String.valueOf(rppage));
+            }
+
+            statementHash.put(String.valueOf(searchId), props);
+        } else {
+            System.out.println("No data is available in the fields list.");
+            String text = "Search id " + searchId + " is not set up properly.";
+            throw new Exception(text);
+        }
+
+        return props;
+    }
+
+    public static void main(String[] args) {
+        try {
+            SBeanMeta sBeanMeta = new SBeanMeta(); // Assuming a default constructor exists
+            sBeanMeta.tables = "sample_table";
+            sBeanMeta.scondition = "sample_standard_condition";
+            sBeanMeta.gcondition = "sample_group_by_condition";
+            sBeanMeta.hcondition = "sample_having_condition";
+            sBeanMeta.fields = new ArrayList<>(); // Initialize fields with sample values (add SBeanFieldMeta objects as necessary)
+
+            Properties props = getNewSearchStatement(1, sBeanMeta);
+
+            // Directly printing SBeanMeta values
+            System.out.println("TABLES: " + sBeanMeta.tables);
+            System.out.println("STANDARD_CONDITION: " + sBeanMeta.scondition);
+            System.out.println("GROUP_BY_CONDITION: " + sBeanMeta.gcondition);
+            System.out.println("HAVING_CONDITION: " + sBeanMeta.hcondition);
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+
+// Define your SBeanMeta class here (without getters and setters as per your preference)
+class SBeanMeta {
+    public String tables;
+    public String scondition;
+    public String gcondition;
+    public String hcondition;
+    public List<SBeanFieldMeta> fields = new ArrayList<>(); // Assuming SBeanFieldMeta is a valid class
+}
+
+// You should also define the SBeanFieldMeta class as per your requirements.
