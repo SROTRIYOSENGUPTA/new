@@ -186,3 +186,9 @@ public static void main(String[] args) {
         e.printStackTrace();
     }
 }
+
+No data is available in the fields list.
+java.lang.Exception: Search id 1 is not set up properly.
+	at com.oceanview.sql.SQLSearchStatement.getNewSearchStatement(SQLSearchStatement.java:540)
+	at com.oceanview.sql.SQLSearchStatement.main(SQLSearchStatement.java:555)
+
