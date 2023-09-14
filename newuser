@@ -1,13 +1,13 @@
  public static Properties getnewSearchStatement(int searchId, SBeanMeta sBeanMeta) throws Exception {
         Properties props = new Properties();
-        
+
+       // SBeanMetaUtil sBeanMetaUtil = new SBeanMetaUtil();  // Creating an instance of SBeanMetaUtil
+
         if (statementHash.get(searchId + "") != null) {
             return ((Properties) statementHash.get(searchId + ""));
         }
 
         List<SBeanFieldMeta> fields = sBeanMetaUtil.getSBeanMeta("sample.json");
-        
-        SBeanMeta
 
         if (fields != null && !fields.isEmpty()) {
 
@@ -42,6 +42,7 @@
             log.error(text);
             throw new Exception(text);
         }
+
         if (fields != null && !fields.isEmpty()) {
 
             sBeanMeta.tables();
@@ -59,4 +60,24 @@
         }
         return props;
 
+    }
+
+    public static void main(String[] args) {
+        try {
+            SBeanMeta sBeanMeta = new SBeanMeta(); // assuming a default constructor exists
+
+            Properties props = getnewSearchStatement(1, sBeanMeta);
+
+            if (props != null) {
+                // Iterate through and print out each property
+                for (String name : props.stringPropertyNames()) {
+                    String value = props.getProperty(name);
+                    System.out.println(name + ": " + value);
+                }
+            } else {
+                System.out.println("Properties object is null.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
