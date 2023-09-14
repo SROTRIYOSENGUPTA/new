@@ -120,3 +120,279 @@ public final class SBeanMetaUtil {
         return beanMeta.ordered(); 
     }
 }
+
+
+////
+
+
+/**
+ * Copyright Stonewain Systems Inc.
+
+ */
+// this is the beginning of SBeanMetaUtil.java
+package com.stonewain.spring.util;
+
+import static com.stonewain.common.constants.Constants.JSON_EXTENSION;
+import static com.stonewain.common.constants.Constants.PATH_SEPARATOR;
+import static com.stonewain.common.constants.Constants.SBEAN_META_DIR;
+import static java.util.Comparator.comparing;
+import static java.util.Comparator.nullsLast;
+import static java.util.stream.Collectors.toSet;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.scache.model.SBeanFieldMeta;
+import com.scache.model.SBeanMeta;
+
+/**
+ * @author Sukhpal Singh
+ */
+
+
+// take in a search id -> search and parse for the json file using the search id and rename the file that it is searching with the search id name
+
+
+    public final class SBeanMetaUtil {
+    private static final Logger logger = LoggerFactory.getLogger(SBeanMetaUtil.class);
+    private final ResourceLoader resourceLoader;
+    private final ObjectMapper objectMapper;
+    private final Function<String, List<SBeanFieldMeta>> reader;
+    private final List<String> activeProfiles;
+    private int searchId;
+
+    public Map<String, List<SBeanFieldMeta>> sbeanFieldCache;
+
+
+    public SBeanMetaUtil(ResourceLoader resourceLoader, Environment environment, ObjectMapper objectMapper) {
+        this.resourceLoader = resourceLoader;
+        this.objectMapper = objectMapper;
+        this.sbeanFieldCache = new HashMap<>();
+        String[] profiles = environment.getActiveProfiles();
+        if (profiles != null && profiles.length > 0) {
+            activeProfiles = Arrays.asList(profiles);
+            Collections.reverse(activeProfiles);
+            reader = (fileName) -> readMetaFieldsForProfiles(fileName);
+        } else {
+            reader = (fileName) -> readMetaFields(fileName);
+            activeProfiles = Collections.emptyList();
+        }
+    }
+
+    public ResourceLoader getResourceLoader()
+    {
+        return resourceLoader;
+    }
+
+    public ObjectMapper getObjectMapper()
+    {
+        return objectMapper;
+    }
+
+    // utilize java object SBeanMeta
+
+
+    public List<SBeanFieldMeta> getSBeanFieldsMeta(String fileName) {
+        if (!sbeanFieldCache.containsKey(fileName)) {
+            // replace getSBeanFieldsMeta with SBeanMeta object here
+
+            logger.info(
+                "{} not present in cache for file : {} and active profiles : {}. Will do resource lookup.",
+            SBeanFieldMeta.class.getSimpleName(), fileName, activeProfiles);
+
+            sbeanFieldCache.put(fileName, reader.apply(fileName));
+
+            List<SBeanFieldMeta> sbeanFields = reader.apply(fileName);
+
+            List<Object> parsedFieldsList = new ArrayList<>();
+
+            parsedFieldsList.addAll(sbeanFields);
+
+            List<SBeanMeta> SBeanMetaList = SBeanMeta.parsedFields(sbeanFields);
+
+            parsedFieldsList.addAll(SBeanMetaList);
+
+        }
+        return sbeanFieldCache.get(fileName);
+        // functionality will remain same whereas the SBeanMeta object will get the properties currently assigned to sbeanfieldsmeta
+    }
+
+
+
+    // combine getSBeanFieldMeta with getSBeanMeta into one logic constructor
+
+    public List<SBeanFieldMeta> getSBeanMeta(String fileName) {
+        if (!sbeanFieldCache.containsKey(fileName)) {
+            logger.info(
+                "{} not present in cache for file : {} and active profiles : {}. Will do resource lookup.",
+            SBeanMeta.class.getSimpleName(), fileName, activeProfiles);
+
+            sbeanFieldCache.put(fileName, reader.apply(fileName));
+
+            List<SBeanFieldMeta> sbeanmeta = reader.apply(fileName);
+
+            List<Object> parsedFieldsList = new ArrayList<>();
+
+            parsedFieldsList.addAll(sbeanmeta);
+
+            List<SBeanMeta> SBeanMetaList = SBeanMeta.parsedFields(sbeanmeta);
+
+            parsedFieldsList.addAll(SBeanMetaList);
+
+        }
+        return sbeanFieldCache.get(fileName);
+    }
+
+    public SBeanMeta groupwithprefix(String prefix) {
+        List<SBeanFieldMeta> combinedFields = new ArrayList<>();
+
+        List<String> matchingFileNames = new ArrayList<>();
+
+        for (String fileName : sbeanFieldCache.keySet()) {
+
+            if (fileName.startsWith(prefix)) {
+                matchingFileNames.add(fileName);
+            }
+        }
+
+        // Sorting file names here based on numeric values
+        matchingFileNames.sort(Comparator.comparingInt(this::extractNumericValue));
+
+        for (String fileName : matchingFileNames) {
+            List<SBeanFieldMeta> sbeanFields = sbeanFieldCache.get(fileName);
+            combinedFields.addAll(sbeanFields);
+        }
+
+        SBeanMeta combinedSBeanMeta = new SBeanMeta();
+        combinedSBeanMeta.setFields(combinedFields);
+
+        return combinedSBeanMeta; // this will return a list of SBeanMeta which consists of both SBeanMeta and SBeanFieldMeta
+    }
+
+    // Helper method to extract the numeric value from a file name
+
+    private int extractNumericValue(String fileName) {
+        String numericPart = fileName.replaceAll("[^0-9]", "");
+        return Integer.parseInt(numericPart);
+    }
+
+    private List<SBeanFieldMeta> readMetaFields(String fileName) {
+        Resource resource = loadResourceFromClasspath(
+            SBEAN_META_DIR + PATH_SEPARATOR + fileName + JSON_EXTENSION);
+        return ordered(readMetaFields(resource));
+    }
+
+    private Resource loadResourceFromClasspath(String path) {
+        return resourceLoader.getResource("classpath:" + path);
+    }
+
+    private List<SBeanFieldMeta> readMetaFieldsForProfiles(String fileName) {
+        Set<SBeanFieldMeta> fields = new HashSet<>();
+        fields.addAll(readMetaFields(fileName));
+        for (String profile : activeProfiles) {
+            Resource resource = loadResourceFromClasspath(SBEAN_META_DIR + PATH_SEPARATOR + profile
+                + PATH_SEPARATOR + fileName + JSON_EXTENSION);
+            fields.addAll(readMetaFields(resource));
+        }
+        return ordered(fields);
+    }
+
+    private Set<SBeanFieldMeta> readMetaFields(Resource resource) {
+        if (resource.exists()) {
+            try (InputStream inputStream = resource.getInputStream()) {
+                SBeanMeta beanMeta = objectMapper.readValue(inputStream, SBeanMeta.class);
+                if (beanMeta != null && beanMeta.fields != null && !beanMeta.fields.isEmpty()) {
+                    return beanMeta.fields.stream().map(field -> getHyphenatedMetaFields(field))
+                        .flatMap(Set::stream).collect(toSet());
+                }
+            } catch (IOException e) {
+                logger.error(e.getMessage(), e);
+            }
+        }
+        return Collections.emptySet();
+    }
+
+    private List<SBeanFieldMeta> ordered(Set<SBeanFieldMeta> fieldMetas) {
+        return new ArrayList<>(fieldMetas).stream().sorted(comparator())
+            .collect(Collectors.toList());
+    }
+
+    private Comparator<SBeanFieldMeta> comparator() {
+        return comparing(SBeanFieldMeta::getDisplayOrder, nullsLast(Integer::compareTo))
+            .thenComparing(SBeanFieldMeta::getFieldName, nullsLast(String::compareTo));
+    }
+
+    private Set<SBeanFieldMeta> getHyphenatedMetaFields(SBeanFieldMeta field) {
+        if (field.nestedFields == null || field.nestedFields.isEmpty()) {
+            return new HashSet<>(Arrays.asList(field));
+        } else
+        {
+            String parentName = field.fieldName;
+            return field.nestedFields.stream().map(f -> {
+                f.fieldName = parentName + "-" + f.fieldName;
+                return getHyphenatedMetaFields(f);
+            }).flatMap(Set::stream).collect(toSet());
+        }
+    }
+
+////
+
+    public static String generateColumns(List<SBeanFieldMeta> fields) {
+
+        StringBuilder sb = new StringBuilder();
+
+        for (SBeanFieldMeta field : fields) {
+
+            sb.append(field.getExpression()).append(",");
+        }
+        if (sb.length() > 0) {
+
+            sb.setLength(sb.length() - 2);
+        }
+        return sb.toString();
+
+    }
+
+    public static String generateFilterConditions(List<SBeanFieldMeta> fields) {
+
+        StringBuilder sb = new StringBuilder();
+
+        for (SBeanFieldMeta field : fields) {
+
+            if (field.getFilter() != null && field.getFilter() == 1) {
+
+                sb.append(field.getExpression()).append("= ? and ");
+
+            }
+        }
+        if (sb.length() > 0) {
+
+            sb.setLength(sb.length() - 5);
+        }
+        return sb.toString();
+
+    }
+
+    public SBeanMeta getSBeanMeta() {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+}
+
+// this is the end of SBeanMetaUtil.java
