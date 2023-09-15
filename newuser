@@ -721,4 +721,22 @@ public static Properties getNewSearchStatement(int searchId, SBeanMeta sBeanMeta
         }
     }
 
+//
+
+Properties p = getSearchStatementJson(1);
+
+ 
+
+        System.out.println("Tables: " + p.get(SQLSearchStatement.TABLES));
+
+        System.out.println("Standard Cond: " + p.get(SQLSearchStatement.STANDARD_CONDITION));
+
+        System.out.println("Groub By: " + p.get(SQLSearchStatement.GROUP_BY_CONDITION));
+
+        System.out.println("Having: " + p.get(SQLSearchStatement.HAVING_CONDITION));
+
+        System.out.println("Record Count: " + p.get(SQLSearchStatement.DEFAULT_RECORD_COUNT));
+
+        System.out.println("Cols: " + p.get(SQLSearchStatement.COLUMNS));
+
 
