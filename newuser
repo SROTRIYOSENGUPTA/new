@@ -741,317 +741,60 @@ Properties p = getSearchStatementJson(1);
 
 /////
 
-
-/**
- * Copyright Stonewain Systems Inc.
-
-
-// this is the start of the program
-
-
- */
-
-// this is the beginning of SBeanFieldMeta.java
-package com.scache.model;
-
-import java.util.List;
-
-
-
-public class SBeanFieldMeta {
-
-
-
-  public Integer depoId;
-
-  public Integer sid;
-
-  public Integer cid;
-
-  public Integer key;
-
-  public Integer req;
-
-  public Integer sort;
-
-  public String format;
-
-  public Integer filter;
-
-  public String expression;
-
-  public String fieldName;
-
-  public boolean hidden;
-
-  public String label;
-
-  public String type;
-
-  public Integer displayOrder;
-
-  public String source;
-
-  public boolean summarizer;
-
-  public List<SBeanFieldMeta> nestedFields;
-
-
-  public List<Long> accounts;
-
-
-
-  public SBeanFieldMeta(String fieldName, String label)
-  {
-      this.fieldName = fieldName;
-
-      this.label = label;
-  }
-
-  /**
-   * @return the accounts
-   */
-  public List<Long> getAccounts()
-  {
-      return accounts;
-  }
-
-  /**
-   * @param accounts the accounts to set
-   */
-
-  public Integer getDepoId()
-  {
-      return depoId;
-  }
-
-  public Integer getFilter()
-  {
-      return filter;
-  }
-
-
-  public Integer sid()
-  {
-      return sid;
-  }
-
-  public Integer cid()
-  {
-      return cid;
-  }
-  /**
-   * @param depoID the depoID to set
-   */
-  public Integer key()
-  {
-      return key;
-  }
-  public Integer req()
-  {
-      return req;
-  }
-
-  public Integer sort()
-  {
-      return sort;
-  }
-
-  public Integer filter()
-  {
-      return filter;
-  }
-
-  public void setAccounts(List<Long> accounts)
-  {
-      this.accounts = accounts;
-  }
-
-  /**
-   * @return the depoID
-   */
-
-  public void setDepoId(Integer depoId)
-  {
-      this.depoId = depoId;
-  }
-
-  /**
-   * @return the label
-   */
-
-  public String getExpression()
-  {
-      return expression;
-  }
-
-  public String getFieldName()
-  {
-      return fieldName;
-  }
-
-  public String getLabel()
-  {
-      return label;
-  }
-
-  /**
-   * @return the query
-   */
-
-
-  /**
-   * @return the source
-   */
-  public String getSource()
-  {
-      return source;
-  }
-
-  /**
-   * @return the type
-   */
-  public String getType()
-  {
-      return type;
-  }
-
-  /**
-   * @return the summarizer
-   */
-  public boolean isSummarizer()
-  {
-      return summarizer;
-  }
-
-  /**
-   * @param label
-   *            the label to set
-   */
-
-  public void setLabel(String label)
-  {
-      this.label = label;
-  }
-
-  /**
-   * @param query
-   *            the query to set
-   */
-
-
-  /**
-   * @param source
-   *            the source to set
-   */
-  public void setSource(String source)
-  {
-      this.source = source;
-  }
-
-  /**
-   * @param summarizer
-   *            the summarizer to set
-   */
-  public void setSummarizer(boolean summarizer)
-{
-      this.summarizer = summarizer;
-  }
-
-  /**
-   * @param type
-   *            the type to set
-   */
-  public void setType(String type)
-  {
-      this.type = type;
-  }
-
-  /**
-   * @return the expression
-   */
-
-
-  /**
-   * @param expression the expression to set
-   */
-  public void setExpression(String expression)
-  {
-      this.expression = expression;
-  }
-
-
-
-  public void setFieldName(String fieldName)
-  {
-      this.fieldName = fieldName;
-  }
-
-  public boolean isHidden()
-  {
-      return hidden;
-  }
-
-  public void setHidden(boolean hidden)
-  {
-      this.hidden = hidden;
-  }
-
-  public List<SBeanFieldMeta> getNestedFields()
-  {
-      return nestedFields;
-  }
-
-  public void setNestedFields(List<SBeanFieldMeta> nestedFields)
-  {
-      this.nestedFields = nestedFields;
-  }
-
-  @Override
-  public int hashCode()
-  {
-      final int prime = 31;
-      int result = 1;
-      result = prime * result + ((fieldName == null) ? 0 : fieldName.hashCode());
-      return result;
-  }
-
-  @Override
-  public boolean equals(Object obj)
-  {
-      if (this == obj) {
-          return true;
-      }
-      if (obj == null) {
-          return false;
-      }
-      if (getClass() != obj.getClass()) {
-          return false;
-      }
-      SBeanFieldMeta other = (SBeanFieldMeta) obj;
-      if (fieldName == null) {
-          if (other.fieldName != null) {
-              return false;
-          }
-      } else if (!fieldName.equals(other.fieldName)) {
-          return false;
-      }
-      return true;
-  }
-
-  public Integer getDisplayOrder()
-  {
-      return displayOrder;
-  }
-
-  public void setDisplayOrder(Integer displayOrder)
-  {
-      this.displayOrder = displayOrder;
-  }
-
-
-
+public static Properties getNewSearchStatement(int searchId, SBeanMeta sBeanMeta) throws Exception {
+    Properties props = new Properties();
+
+    if (statementHash.get(String.valueOf(searchId)) != null) {
+        return (Properties) statementHash.get(String.valueOf(searchId));
+    }
+
+    // Populating SBeanMeta object with random values here
+    sBeanMeta.tables = "table" + new Random().nextInt(100);
+    sBeanMeta.scondition = "condition" + new Random().nextInt(100);
+    sBeanMeta.gcondition = "group" + new Random().nextInt(100);
+    sBeanMeta.hcondition = "having" + new Random().nextInt(100);
+
+    // Adding some random columns to the columns list
+    sBeanMeta.columns = List.of(
+        new SBeanFieldMeta("Column1", "Label1"),
+        new SBeanFieldMeta("Column2", "Label2"),
+        new SBeanFieldMeta("Column3", "Label3")
+    );
+
+    // Concatenating column names into a single string
+    String columns = sBeanMeta.columns.stream()
+            .map(SBeanFieldMeta::getFieldName)
+            .collect(Collectors.joining(", "));
+
+    // Adding values directly from SBeanMeta object to props
+    props.put(SQLSearchStatement.TABLES, sBeanMeta.tables);
+    props.put(SQLSearchStatement.STANDARD_CONDITION, sBeanMeta.scondition);
+    props.put(SQLSearchStatement.GROUP_BY_CONDITION, sBeanMeta.gcondition);
+    props.put(SQLSearchStatement.HAVING_CONDITION, sBeanMeta.hcondition);
+    props.put(SQLSearchStatement.COLUMNS, columns);
+    props.put(SQLSearchStatement.DEFAULT_RECORD_COUNT, "100"); // Set a default record count here
+
+    // Adding the created props to statementHash for possible retrieval in subsequent calls
+    statementHash.put(String.valueOf(searchId), props);
+
+    return props;
 }
-// this is the end of SBeanFieldMeta.java
 
+public static void main(String[] args) {
+    try {
+        SBeanMeta sBeanMeta = new SBeanMeta();
+        Properties props = getNewSearchStatement(1, sBeanMeta);
+
+        // Printing the properties
+        System.out.println("Tables: " + props.getProperty(SQLSearchStatement.TABLES));
+        System.out.println("Standard Cond: " + props.getProperty(SQLSearchStatement.STANDARD_CONDITION));
+        System.out.println("Group By: " + props.getProperty(SQLSearchStatement.GROUP_BY_CONDITION));
+        System.out.println("Having: " + props.getProperty(SQLSearchStatement.HAVING_CONDITION));
+        System.out.println("Record Count: " + props.getProperty(SQLSearchStatement.DEFAULT_RECORD_COUNT));
+        System.out.println("Cols: " + props.getProperty(SQLSearchStatement.COLUMNS));
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
 
