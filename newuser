@@ -591,3 +591,13 @@ end pack_util;
 /
 
 show errors
+
+////
+
+
+Create a new function in this pack_util such that it should succeed when the date is not the valid date for the format, returning null instead. 
+If the date is valid with respect to the format it should return the date provided. 2 varchars as input should be taken in 
+Take 2 varchars as input and then return a date.
+The function needs to be able to convert the string to date and return the date. 
+It should be able to catch exceptions and when caught return null instead and this will end the program
+
