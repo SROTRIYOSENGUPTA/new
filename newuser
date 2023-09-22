@@ -1,94 +1,237 @@
-create or replace package pack_util as
-  TYPE TYPE_SPLIT_ROW IS record (A int, B varchar2(4000));
-  TYPE TYPE_SPLIT IS TABLE OF TYPE_SPLIT_ROW;
-  TYPE TYPE_DATE_ROW IS record(D date);
-  TYPE TYPE_DATE IS TABLE OF TYPE_DATE_ROW;
-  TYPE TYPE_DEPO_CONF_ROW IS record(
-   settlement_day_count int ,
-   settle_accrual_with_trade int,
-   minimum_lot_size int ,
-   lot_size_increment int ,
-   term_id int ,
-   settle_accrual_on_close int ,
-   open_time int,
-   close_time int,
-   pref_sec_id_type varchar2(200),
-   depo_id int ,
-   category_1_id int ,
-   position_type_id int ,
-   depo_config_id int ,
-   maximum_lot_size int,
-   no_lot_warning_on_return int,
-   disable_accrual_settlement_for_trade int);
-  TYPE TYPE_DEPO_CONF IS TABLE OF TYPE_DEPO_CONF_ROW;
-  TYPE TYPE_COLL_TYP_ROW IS record(
-   collateral_type_id int,
-   collateral_type varchar2(200),
-   ext_collateral_type varchar2(200),
-   triparty_agent_code varchar2(100));
-  TYPE TYPE_collateralType IS TABLE OF TYPE_COLL_TYP_ROW;
-
-  TYPE TYPE_rateprocessconfig IS TABLE OF t_rateprocessconfig%rowtype;
-
+create or replace package body pack_util as
   function f_split (
       i_string    in varchar2,
       i_delimiter in varchar2
   )
-  return TYPE_SPLIT PIPELINED;
+  return TYPE_SPLIT PIPELINED
+  is
+      x_one    TYPE_SPLIT_ROW;
+      x_temp   varchar2(4000) := i_string;
+      x_index  int;
+      x_count  int := 1;
+  begin
+    LOOP
+      IF (x_temp IS NULL)
+      THEN
+        EXIT;
+      END IF;
+
+      x_index := instr(x_temp, i_delimiter);
+
+      IF (x_index > 0)
+      THEN
+        x_one.A := x_count;
+        x_one.B := substr(x_temp, 1, x_index - 1);
+        x_count := x_count + 1;
+
+        PIPE ROW(x_one);
+
+        x_temp := substr(x_temp, x_index + length(i_delimiter));
+      ELSE
+        x_one.A := x_count;
+        x_one.B := x_temp;
+        x_count := x_count + 1;
+
+        PIPE ROW(x_one);
+
+        EXIT;
+      END IF;
+    END LOOP;
+
+    RETURN;
+  end f_split;
 
   function f_getDepoConfig (
       i_depo_id    in int,
       i_category_1_id in int,
-      i_position_type_id in int ,
+      i_position_type_id in int,
       i_counterparty_id in int,
       i_term_id in int
   )
-  return TYPE_DEPO_CONF PIPELINED;
+   return TYPE_DEPO_CONF PIPELINED
+  is
+  x_depo_conf  TYPE_DEPO_CONF_ROW;
+  begin
+   select * into x_depo_conf from (
+     select settlement_day_count  , settle_accrual_with_trade ,
+         minimum_lot_size  , lot_size_increment  , term_id  ,settle_accrual_on_close  ,open_time , close_time
+        ,pref_sec_id_type ,depo_id  ,category_1_id  ,position_type_id  , depo_config_id  ,maximum_lot_size,
+        no_lot_warning_on_return , disable_accrual_settlement_for_trade
+       from t_depoconfig
+       where depo_id = i_depo_id and category_1_id = i_category_1_id
+       and (position_type_id = i_position_type_id or position_type_id = (select parent_id from t_positiontype where position_type_id = i_position_type_id))
+       and (term_id = i_term_id or term_id is null) and (counterparty_id = i_counterparty_id or counterparty_id is null)
+       order by case when position_type_id = i_position_type_id then 1 else 2 end asc, counterparty_id, term_id)
+       where rownum < 2;
+
+   PIPE ROW(x_depo_conf);
+   RETURN;
+  end f_getDepoConfig;
 
   function f_getDate (
       i_hh_mm_ss  in  varchar2,       -- format: hh:mm:ss, or hh:mm
       i_date      in  date := trunc(sysdate),
       i_delimiter in  varchar2 := ':'
   )
-  return date;
+  return date
+  as
+    x_count     int;
+    x_format    varchar2(30) := 'mmddyyyy hh24:mi:ss';
+    x_date      varchar2(30);
+  begin
+    x_date := to_char(trunc(i_date), 'mmddyyyy');
 
+    select count(*)
+    into x_count
+    from table(f_split(i_hh_mm_ss, i_delimiter));
+
+    if (x_count = 1)
+    then
+      x_format := 'mmddyyyy hh24';
+    elsif (x_count = 2)
+    then
+      x_format := 'mmddyyyy hh24:mi';
+    end if;
+
+    return to_date(x_date || ' ' || i_hh_mm_ss, x_format);
+  end f_getDate;
+
+  -- select pack_util.f_getMonth(to_date('1/2/2009', 'mm/dd/yyyy'), to_date('5/23/2010', 'mm/dd/yyyy')) from dual
+  -- select pack_util.f_getMonth(to_date('1/2/2012', 'mm/dd/yyyy'), to_date('5/23/2010', 'mm/dd/yyyy')) from dual
   function f_getMonth (
       i_date_1    in date,
       i_date_2    in date
   )
-  return int;
+  return int
+  as
+    x_month   int;
+  begin
+    x_month := (to_number(to_char(i_date_2, 'yyyy')) - to_number(to_char(i_date_1, 'yyyy'))) * 12;
+    x_month := x_month + (to_number(to_char(i_date_2, 'mm')) - to_number(to_char(i_date_1, 'mm')));
+
+    return x_month;
+  end f_getMonth;
 
   function f_getFirstDayInMonth (
-      i_date in date,
-      i_calendar_id     in  t_calendar.calendar_id%type := 1
-  )
-  return date;
+    i_date  in date,
+    i_calendar_id t_calendar.calendar_id%type := 1
+  ) return date
+  as
+    Mo VARCHAR2(2);
+    Yr VARCHAR2(4);
+    x_date date;
+  begin
+    Mo := TO_CHAR(i_date, 'MM');
+    Yr := TO_CHAR(i_date, 'YYYY');
+    x_date := TO_DATE(Mo || '-01-' || Yr, 'MM-DD-YYYY');
+    /*if f_isBusinessDate(1, x_date) <> 1
+      then x_date := f_nextBusinessDate(i_calendar_id, x_date, 1);
+    end if;*/
+    return x_date;
+  end f_getFirstDayInMonth;
+   --- likne 134 + is my code for he new function added
+
+function f_getnewDate ( -- this is the start of the function
+    i_date in varchar2, -- this is the first input which is the date in string form
+    i_format in varchar2 -- this is the second input in the formate of the date
+)
+return date
+is
+    x_converted_date date;
+begin
+    -- here we convert the string to a date
+    x_converted_date := to_date(i_date, i_format);
+    return x_converted_date;
+exception
+    -- this will catch exceptions if they're present
+    when others then
+        return null;
+end f_convertStringToDate;
+-- this is the end of the function
 
   function f_isBusinessDate (
       i_calendar_id     in  t_calendar.calendar_id%type := 1,     -- USA
       i_date            in  date := trunc(current_date)
   )
-  return int;
+  return int
+  as
+      x_count     int;
+      x_date      date := trunc(nvl(i_date, current_date));
+  begin
+    if (to_char(x_date, 'D') in (1, 7))     -- 1, 7 is for sunday and saturday
+    then
+        return 0;
+    end if;
+
+    select count(*) into x_count
+    from t_holiday
+    where calendar_id = nvl(i_calendar_id, 1)
+      and holiday = x_date;
+
+    if (x_count > 0)
+    then
+        return 0;
+    end if;
+
+    return 1;
+  end f_isBusinessDate;
 
   function f_getBusinessDaysCountBetweenDates (
       i_calendar_id     in  t_calendar.calendar_id%type := 1,     -- USA
       i_start_date      in  date := trunc(current_date),
       i_end_date        in  date := trunc(current_date)
   )
-  return int;
+  return int
+  as
+      x_count           int:=0;
+      x_start_date      date := trunc(nvl(i_start_date, current_date));
+      x_end_date        date := trunc(nvl(i_end_date, current_date));
+  begin
+    while(x_start_date <= x_end_date)
+    LOOP
+        if (pack_util.f_isBusinessDate(i_calendar_id, x_start_date) = 1)
+        then
+        x_count:=x_count+1;
+        end if;
+        x_start_date:=x_start_date+1;
+    END LOOP;
+    return x_count;
+  end f_getBusinessDaysCountBetweenDates;
+
 
   function f_getDaysCountBetweenDates (
       i_start_date      in  date := trunc(current_date),
       i_end_date        in  date := trunc(current_date)
   )
-  return int;
+  return int
+  as
+      x_count           int:=0;
+  begin
+    if (i_start_date <= i_end_date)
+    then
+      x_count := i_end_date - i_start_date;
+    end if;
+    return x_count;
+  end f_getDaysCountBetweenDates;
 
+
+  -- select pack_util.f_nextbusinessdate(1, to_date('8/20/2010', 'mm/dd/yyyy'), 0) from dual
   function f_nextBusinessDate (
       i_calendar_id     in  t_calendar.calendar_id%type := 1,     -- USA
       i_date            in  date := trunc(current_date),
       i_num_days    in  int := 1
   )
-  return date;
+  return date
+  as
+      x_date      date := trunc(nvl(i_date, current_date)) + nvl(i_num_days, 1);
+  begin
+    while (pack_util.f_isBusinessDate(i_calendar_id, x_date) = 0)
+    loop
+        x_date := x_date + 1;
+    end loop;
+
+    return x_date;
+  end f_nextBusinessDate;
 
   function f_getNthBusinessDate (
       i_calendar_id     in  t_calendar.calendar_id%type := 1,     -- USA
@@ -96,508 +239,47 @@ create or replace package pack_util as
       i_n_days          in  int := 1 --Positive n for future dates, Negative n from prior dates,
                                      --Zero returns current date if it is a business date otherwise the next business date
   )
-  return date;
-
-  function f_getPriorBusinessDate (
-      i_calendar_id     in  t_calendar.calendar_id%type := 1,     -- USA
-      i_date            in  date := trunc(current_date),
-      i_num_days    in  int := 1,
-      i_business_only   in  int := 1            -- 1: to count business days only, 0: count all days
-  )
-  return date;
-
-  function f_getStatusId (
-    i_status      in t_status.status%type
-  )
-  return t_status.status_id%type;
-
-  function f_getStatus (
-    i_status_id    in t_status.status_id%type
-  )
-  return t_status.status%type;
-
-/**************************************************
-    Accrual reset date can be different from pay date or reset date.
-    This is for basis Actual/Actual (id = 3) and 30/360 (id = 4)
-
-        If i_for_previus = P, always return a date after @i_date.
-        If i_for_previus = N and i_date = one accrual reset date, return i_date.
-
-    Only month and day of i_reset_end are used.
-
-        select f_getAccrualResetDate (to_date('3/25/2010', 'mm/dd/yyyy'), 4, to_date('12/25/2015', 'mm/dd/yyyy'), 'n') from dual
-**************************************************/
-  function f_getAccrualResetDate (
-      i_date           in date := trunc(current_date),     -- the starting date
-      i_basis_id       in number,
-      i_reset_end      in date,     -- next reset, security reset date or position reset date
-      i_prev_or_next   in varchar2  -- P or p: to get previous reset date, other: to get next reset date
-  )
-  return date;
-
-/**************************************************
-  30/360 investment paydown/return, need to adjust quantity from accrual reset date, not settlement date
-  For investment, use settle date - payment delay
-  For loan paydown/return, use settle_date and reset date from loan ticket.
-**************************************************/
-  function f_get30360AccrualChangeDate (
-      i_settle_date           in date := trunc(current_date),     -- the starting date
-      i_payment_delay         in int := 0,
-      i_reset_end             in date     -- next reset, security reset date or position reset date
-  )
-  return date;
-
-    function f_getInterestDayCount (
-        i_start_date        date,       -- should be the last day of prior accrual period, important for 30/360
-        i_end_date          date,
-        i_maturity_date     date,       -- used for ISDA, the only difference between regular 30/360
-        i_basis_id          int         -- Actual/Actual is not evaluated here due to UST rule
-    )
-    return int;
-
-    function f_getOneDayInterestDayCount (
-        i_start_date        date,       -- should be the last day of prior accrual period, important for 30/360
-        i_date              date,       -- for the date, interest day count is returned
-        i_maturity_date     date,       -- used for ISDA, the only difference between regular 30/360
-        i_basis_id          int         -- Actual/Actual is not evaluated here due to UST rule
-    )
-    return int;
-
-  procedure p_addJobLog (
-      i_user_id         in  t_user.user_id%type,
-      i_job_id          in  t_job.job_id%type,
-      i_as_of_date      in  date := trunc(current_date),
-      i_account_id      in  t_account.account_id%type := null,
-      i_trading_desk_id in  t_tradingdesk.trading_desk_id%type := null,
-      i_comments        in  t_joblog.comments%type := null,
-      i_status_id       in  t_status.status_id%type := 16,      -- incomplete
-      i_header_date     in  date := null,
-      i_process_date    in  date := null,
-      i_file_name       in  t_joblog.file_name%type:= null,
-      i_trailer_count   in  t_joblog.trailer_count%type:= null,
-      i_program_count   in  T_JOBLOG.program_count%type:= null,
-      i_difference      in  t_joblog.difference%type:= null,
-      o_job_log_id      out t_joblog.job_log_id%type
-  );
-
-  procedure p_dbLog (
-      i_user_id                 in  t_user.user_id%type,
-      i_comments                in  t_dblog.comments%type,
-      i_level                   in  int := 1,        -- 1: low, 2: medium, 3: high
-      i_log_id                  in  t_dblog.log_id%type := null,
-      i_log_parent_id           in  t_dblog.parent_id%type := null,
-      i_program_name            in  t_dblog.program_name%type := null,
-      i_inputs                  in  t_dblog.input_param_string%type := null
-  );
-
-  function f_isnumber (
-      i_string          in  varchar2
-  )
-  return int;
-
-  function f_getnumber (
-      i_string          in  varchar2
-  )
-  return number;
-
-  function md5( input varchar2 ) return sys.dbms_obfuscation_toolkit.varchar2_checksum;
-  function str2table( p_string in varchar2 ) return type_table_of_number;
-  function f_str2tbl(p_str in clob, p_delimiter in varchar2) return type_table_of_varchar2;
-
-  procedure save_user_grid_preferences (
-    i_user_id           IN T_USER_SEARCHDISPLAY.user_id%type,
-    i_search_name       IN varchar2,
-    i_disp_name         IN varchar2,
-    i_search_display_id IN T_USER_SEARCHDISPLAY.search_display_id%type,
-    i_is_default        IN smallint := null,
-    i_disp_state        clob,
-    o_search_display_id out T_USER_SEARCHDISPLAY.search_display_id%type,
-    o_error             out varchar2
-  );
-
-  procedure p_setdefaultsearchdisplay (
-      i_user_id           IN T_USER_SEARCHDISPLAY.user_id%type,
-      i_search_id         IN T_SEARCH.search_id%type,
-      i_srch_disp_id      IN T_USER_SEARCHDISPLAY.search_display_id%type
-  );
-
-  function blob_to_varchar2table(i_cursor IN sys_refcursor) return TYPE_TABLE_OF_VARCHAR2 pipelined;
-
-  function f_getLuhn10CheckDigit (
-      i_string    in varchar2
-  )
-  return INT;
-
-  procedure p_gatherSchemaStats (
-    ownname         in varchar2 := null,
-    options         in varchar2 := 'GATHER'
-  );
-
-  procedure p_gatherTableStats(tabname IN varchar2);
-  procedure p_gatherTableStatsAutonomous(tabname IN varchar2);
-
-  procedure p_errorCorrection (
-    i_user_id           in t_user.user_id%type,
-    o_error             out varchar2
-  );
-
-  procedure p_addAlert (
-    i_user_id            t_user.user_id%type,
-    i_alert_type_id      t_alert.alert_type_id%type,
-    i_account_id        t_alert.account_id%type,
-    i_source                  t_alert.source%type,
-    i_subject                  t_alert.subject%type,
-    i_body                      t_alert.body%type,
-    o_alert_id        out t_alert.alert_id%type
-  );
-
-  procedure p_clearAccrual (
-      i_account_id        in  int,
-      i_position_id       in  int := null,      -- null for all positions
-      i_position_type_id  in  int := null,      -- null for all position types
-      i_start_date        in  date
-  );
-
-  function f_getISINChecksum (
-    i_isin in varchar2      -- need first 11 characters of an ISIN
-  )
-  return int;
-
-  function f_getISIN (
-    i_cusip in varchar2
-  )
-  return varchar2;
-
-  procedure p_updateChildIndex (
-    i_user_id           int,
-    i_date              date,     -- parent index is updated for this date
-    i_parent_index_id   int
-  );
-
-  procedure p_updateChildIndexByDate (
-    i_user_id           int,
-    i_date              date := trunc(sysdate)
-  );
-
-  function f_get30360DayCount(i_start_date date, i_end_date date)
-  return int;
-
-  -- add two values, if both are numeric, return the some of the two values, otherwise use string operator
-  function f_add (
-      i_value_1           varchar2,
-      i_value_2           varchar2,
-      i_string_operator   varchar2 := '+'          -- + to concat two string, G to get the max of two string
-  )
-  return varchar2;
-
-  procedure p_procPerfLog (
-    i_program_id            NUMBER,
-    i_parent_id             NUMBER,
-    i_program_type          VARCHAR2,
-    i_program_name          VARCHAR2,
-    i_count                 PLS_INTEGER,
-    i_elapsed_time          NUMBER,
-    i_input_params          VARCHAR2,
-    i_comments              VARCHAR2
-  );
-
-  procedure p_diffCursors (
-    i_program_1_name    in  VARCHAR2,
-    i_program_2_name    in  VARCHAR2,
-    i_input_string      in  VARCHAR2,
-    i_key_count         in  NUMBER := 0
-  );
-
-  procedure p_resetInProgressMessages(
-     i_look_back_minutes in int := 60,
-     o_error out varchar2
-  );
-
-  function f_timeZoneConversionForTime (
-      i_time             in  number,
-      i_from_time_zone   in  varchar2,
-      i_to_time_zone    in  varchar2
-  )
-  return number;
-
-  function f_timeZoneConversionForDate (
-      i_date             in  date,
-      i_from_time_zone   in  varchar2,
-      i_to_time_zone    in  varchar2
-  )
-  return varchar2;
-  
-  function f_timeZoneConversionForDate24HrFormat (
-      i_date             in  date,
-      i_from_time_zone   in  varchar2,
-      i_to_time_zone    in  varchar2
-  )
-  return varchar2;
-  
-  function f_convertDateFromDbTimezone(
-      i_date             in  date,
-      i_to_time_zone     in  varchar2)
-  return date;
-
-  function f_lastCacheRefreshTime (
-      i_to_time_zone    in  varchar2
-  )
-  return varchar2;
-
-  procedure p_addAccountingPositionType (
-    i_position_type_id  int := null,        -- if null, use next position type id
-    i_position_type     varchar2 := 'Exclusive Lending Fee Adj Down',
-
-    i_trade_type_id     int := null,        -- if null, use next trade type id, +1 for cancel, +2 for fail
-    i_trade_type        varchar2 := 'Receive Exclusive Lending Fee Adj Down',
-    i_trade_cash_flow   int := 1,           -- 1 incoming, -1 outgoing
-    i_for_accrual       int := 1,           -- 1 for accrual, not principal trade, 0: principal trade
-
-    i_accrual_type_id   int := null,        -- if null,use next accrual type_id, parent accrual id, +1, +2, +3 for accrual, up, down
-    i_accrual_type      varchar2 := 'Exclusive Lending Fee Receivable',
-    i_is_client_earning int := 1,
-    i_accrual_type_drcr int := 1,           -- main accrual type dr cr indicator, 1 expense, -1 income
-    o_error             out varchar2
-  );
-
-  function f_getDeskDate (
-    i_trading_desk_id   in t_tradingdesk.trading_desk_id%type
-  )
-  return date;
-
-  FUNCTION f_getDatesByFrequency (
-    i_start_date            in date,  --always returns start date
-    i_end_date              in date,
-    i_frequency_id          in t_frequency.frequency_id%type,  --so far only 1, 2, 3, 6, 9, 10, 12
-    i_calendar_id           in t_calendar.calendar_id%type,
-    i_dir                   in int,    --1 (forward from start date) or -1 (backwards from end date)
-    i_bus_dates_only        in int
-  )
-  RETURN TYPE_DATE PIPELINED;
-
-  procedure p_updateBMIndexRate (
-      i_user_id     in  int,
-      i_date        in  date := trunc(sysdate),
-      o_error       out varchar2
-  );
-
-  PROCEDURE p_copyTradeToFeedTrade (
-        i_user_id               in int,
-        i_source_db             in varchar2,
-        i_source_db_link        in varchar2,
-        i_feed_trade_source     in varchar2,
-        o_error                 out varchar2
-  );
-
-  PROCEDURE p_updateUserSearchDisplay (
-    i_user_id             in T_USER_SEARCHDISPLAY.user_id%type,
-    i_search_id           in T_USER_SEARCHDISPLAY.search_id%type,
-    i_to_user_ids         in VARCHAR2
-  );
-
-  PROCEDURE p_copyMessages (
-        i_user_id               in  int,
-        i_message_format_ids    in  varchar2,
-        i_message_direction     in  varchar2,
-        i_message_status_ids    in  varchar2,
-        i_update_create_ts      in  varchar2,
-        i_source_db             in  varchar2,
-        i_source_db_link        in  varchar2,
-        o_max_msg_id            out int,
-        o_copied_msg_count      out int,
-        o_error                 out varchar2
-  );
-
-  procedure p_addCurrentDayFeedTrade (
-      i_user_id                      in  int,
-      i_trade_type_id_list           in varchar2,
-      i_is_instructed                in t_feedtrade.is_instructed%type,
-      i_add_accrual_cleanup          in  int,
-      i_mark_target_price            in  int,
-      i_settle_date                  in date,
-      i_post_date                    in date,
-      i_do_not_post                  in t_feedtrade.do_not_post%type,
-      i_feed_trade_source            in  varchar2,
-      o_error       out varchar2
-  );
-
-  PROCEDURE p_deletePositions(
-        i_parent_id_list        in  varchar2,
-        i_position_type_id      in  varchar2,
-        o_error                 out varchar2
-  );
-
-  procedure p_EODCancelTrade (
-      i_user_id                      in  int,
-      i_feed_trade_source            in  varchar2,
-      i_DNI                          in  int := 1,
-      i_downstream                   in  int := 0,
-      o_error                        out varchar2
-  );
-
-  procedure p_addAccrualClnupFeedTrade (
-      i_user_id                      in  int,
-      i_do_not_post                  in t_feedtrade.do_not_post%type,
-      i_is_instructed                in  t_feedtrade.is_instructed%type,
-      i_feed_trade_source            in  varchar2,
-      i_settle_date                  in  date,
-      i_post_date                    in  date,
-      o_error                        out varchar2
-  );
-  function f_reportgetSubLA(
-        i_comments          t_trade.comments%type,
-        i_position_id       t_Position.position_id%type
-  )
-  return varchar2;
-
-
-
-  function f_encode (
-        i_number int,
-        i_length int)
-  return varchar2;
-
-    PROCEDURE p_copyAndConvertTrades (
-      i_user_id               in int,
-      i_source_db             in varchar2,
-      i_source_db_link        in varchar2,
-      i_feed_trade_source     in varchar2,
-      o_error                 out varchar2
-    );
-
- function f_getBorrowTradeId (
-      i_loan_trade_type_id      in t_tradeType.TRADE_TYPE_ID%type
- )
- return t_tradeType.TRADE_TYPE_ID%type;
-
- function f_getBorrowPositionTypeId (
-    i_position_type_id      in t_positionType.position_type_id%type
- )
- return t_positionType.position_type_id%type;
-
-  function f_getTermType (
-    i_end_date                  in t_position.end_date%type,
-    i_as_of_date                in date, -- date used to determine overnight vs term.
-    i_calendar_id               in t_calendar.calendar_id%type,
-    i_is_evergreen              in int
-  )
-  return t_term.term_id%type;
-
-  procedure p_newTradeExplosion (
-      i_user_id                      in  int,
-      i_feed_trade_source            in  varchar2,
-      o_error                        out varchar2
-  );
-
-  procedure p_tradeExplosion (
-      i_user_id                      in  int,
-      i_feed_trade_source            in  varchar2,
-      o_error                        out varchar2
-  );
-
-  procedure p_deleteTestPositions (
-      i_user_id                      in  int,
-      o_error                        out varchar2
-  );
-
-  procedure p_copyPosToFeedPos (
-      i_user_id               in  int,
-      i_source_db             in  varchar2,
-      i_source_db_link        in  varchar2,
-      i_pos_type_id_list      in  varchar2,
-      i_pos_status_id_list    in  varchar2,
-      o_error                 out varchar2,
-      o_feed_id               out t_feed.feed_id%type
-  );
-
-  function f_getPostPeriod(
-      i_post_date          in date,
-      i_trade_date         in date
-      )
-   return   varchar2 ;
-
-  function f_getCollateralType (
-      i_account_id          in t_account.account_id%type := null,
-      i_custodian_account_id  in t_account.account_id%type := null,
-      i_counterparty_id     in t_account.account_id%type := null
-    )
-   return TYPE_collateralType PIPELINED;
-
-  function f_getCollateralTypeForNonBlockPos (
-      i_account_id          in t_account.account_id%type := null,
-      i_custodian_account_id  in t_account.account_id%type := null,
-      i_counterparty_id     in t_account.account_id%type := null
-  )
-  return TYPE_collateralType PIPELINED;
-
-  function f_getFlipTradeTypeId (
-      i_trade_type_id       in  t_tradetype.trade_type_id%type
-  )
-  return int;
-
-  procedure p_coverShortsAndLong (
-      i_user_id                      in  int,
-      i_depo_id                      in  int,
-      i_strategy_id                  in  int,
-      o_error                        out varchar2
-  );
-
-  function f_getTradeExpConfigId (
-      i_init_account_id          in  int,
-      i_init_counterparty_id     in  int,
-      i_init_position_type_id    in  int,
-      i_init_country_id          in  int,
-      i_init_category_id         in  int,
-      i_init_purpose             in  varchar2
-  )
-  return int result_cache ;
-
-  procedure p_copyTrade (
-    i_source_trade_id       in t_trade.trade_id%type,
-    o_trade_id              out t_trade.trade_id%type
-  );
-
-  function f_getPriorWeekDate (
-      i_date     in  date := trunc(sysdate)
-  )
-  return date;
-
-  function f_getTradeCategoryId (
-      i_trade_type_id       in  t_tradetype.trade_type_id%type
-  )
-  return int;
-
-  function f_getRateProcessRequestParams (
-    i_rate_process_id     in t_rateprocess.rate_process_id%type,
-    i_trading_system_id   in t_tradingsystem.system_id%type := null,
-    i_transport_id        in number := null,
-    i_security_id         in t_security.security_id%type := null,
-    i_account_id          in t_account.account_id%type := null,
-    i_counterparty_id     in t_account.account_id%type := null,
-    i_category_id         in t_category.category_id%type := null, --if null get it from security category
-    i_country_id          in t_country.country_id%type := null, --if null get it from security country
-    i_depo_id             in t_depository.depo_id%type := null,
-    i_match_score_id      in t_matchscore.match_score_id%type := null --will be used later to allow specification of row matching logic, currently the logic is hardcoded here as a draft
-  )
-  --return t_rateprocessconfig%rowtype;
-  return TYPE_rateprocessconfig PIPELINED;
-
-  function f_isCallbackRequired (
-      i_trade_id          in  t_trade.trade_id%type
-  )
-  return int;
-
-end pack_util;
-/
-
-show errors
-
+  return date
+  as
+      x_date      date := trunc(nvl(i_date, current_date));
+      x_count     int;
+      x_num_days  int := nvl(i_n_days, 1);
+  begin
+      if (x_num_days in (0, -1, 1))
+      then
+        x_date := x_date + x_num_days;
+
+        while (pack_util.f_isBusinessDate(i_calendar_id, x_date) = 0)
+        loop
+          x_date := x_date + (mod(1, x_num_days) + x_num_days);
+        end loop;
+      else
+        x_count := 1;
+
+        while (x_count <= abs(x_num_days))
+        loop
+            x_date := x_date + (x_num_days/abs(x_num_days));
+
+            while (pack_util.f_isBusinessDate(i_calendar_id, x_date) = 0)
+            loop
+              x_date := x_date + (x_num_days/abs(x_num_days));
+            end loop;
+
+            x_count := x_count + 1;
+        end loop;
+      end if;
+
+    return x_date;
+  end f_getNthBusinessDate;
 ////
 
+this needs to be a more accurate name for this. newdate1 is not a valid name. also it must be in camel case.
 
 Create a new function in this pack_util such that it should succeed when the date is not the valid date for the format, returning null instead. 
 If the date is valid with respect to the format it should return the date provided. 2 varchars as input should be taken in 
 Take 2 varchars as input and then return a date.
 The function needs to be able to convert the string to date and return the date. 
 It should be able to catch exceptions and when caught return null instead and this will end the program
+
+.mz
 
